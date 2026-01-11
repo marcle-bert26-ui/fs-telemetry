@@ -45,7 +45,9 @@ pip install -r requirements.txt
 
 ### 3. Launch
 ```bash
-python app.py
+python app.py        # GUI mode (LIVE/REPLAY)
+python main.py       # CLI mode
+python review.py     # Project review
 ```
 
 ---

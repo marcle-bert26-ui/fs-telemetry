@@ -39,17 +39,23 @@
 
 ### Windows
 ```bash
-double-cliquez sur run.bat
+double-cliquez sur run.bat    # Mode GUI
+# ou
+python review.py             # Vue d'ensemble
 ```
 
 ### Linux / macOS
 ```bash
-bash run.sh
+bash run.sh                   # Mode GUI
+# ou
+python3 review.py            # Vue d'ensemble
 ```
 
 Ou manuellement :
 ```bash
-python app.py
+python app.py                # Mode GUI
+python main.py               # Mode CLI
+python review.py             # Résumé et statistiques
 ```
 
 ---

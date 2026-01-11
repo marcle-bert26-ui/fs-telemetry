@@ -39,17 +39,23 @@
 
 ### Windows
 ```bash
-double-click run.bat
+double-click run.bat    # GUI mode
+# or
+python review.py       # Project review
 ```
 
 ### Linux / macOS
 ```bash
-bash run.sh
+bash run.sh            # GUI mode
+# or
+python3 review.py      # Project review
 ```
 
 Or manually:
 ```bash
-python app.py
+python app.py          # GUI mode
+python main.py         # CLI mode
+python review.py       # Project overview & statistics
 ```
 
 ---
