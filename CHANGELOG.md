@@ -16,6 +16,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cloud storage integration
 - Mobile app support
 
+## [1.1.0] - 2026-01-11
+
+### Added
+- **CI/CD Pipeline (GitHub Actions)**
+  - Automated testing on Python 3.8-3.12
+  - Cross-platform testing (Windows, Linux, macOS)
+  - Code coverage reporting
+  - Automatic linting
+
+- **Type Stubs & IDE Support**
+  - PyQt5 type stubs for Pylance/mypy
+  - Pyrightconfig for static analysis
+  - VS Code settings configuration
+
+### Fixed
+- **PyQt5 Compatibility**
+  - Improved PyQt5 mocking for headless CI/CD environments
+  - Fixed import errors in GUI modules
+  - Created conftest.py mocking strategy for all PyQt5 modules
+
+- **CSV Logger**
+  - Fixed unique filename generation with counter to prevent collisions
+  - Ensured rapid sequential calls generate unique filenames
+
+- **Dependencies**
+  - Created separate `requirements-ci.txt` without PyQt5 for CI
+  - Updated PyQt5 to compatible versions
+  - Fixed system dependencies for Ubuntu 24.04
+
 ## [1.0.0] - 2026-01-11
 
 ### Added

@@ -2,6 +2,10 @@
 
 A comprehensive Python application for acquiring, logging, and analyzing telemetry data from Formula Student vehicles. Features both real-time Arduino data acquisition and offline CSV replay capabilities with a modern GUI interface.
 
+[![Tests](https://github.com/marcle-bert26-ui/fs-telemetry/actions/workflows/tests.yml/badge.svg)](https://github.com/marcle-bert26-ui/fs-telemetry/actions/workflows/tests.yml)
+[![Python 3.8+](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 ## Features
 
 🟢 **LIVE MODE** - Real-time data acquisition
@@ -19,22 +23,24 @@ A comprehensive Python application for acquiring, logging, and analyzing telemet
 📊 **Advanced Features**
 - Multi-threaded architecture for smooth UI
 - Comprehensive error handling
-- Unit tested (35+ test cases)
+- **All 35+ tests passing** ✅
 - Professional PyQt5 GUI
 - Detailed logging and reporting
+- **Full CI/CD with GitHub Actions** (Python 3.8-3.12, Windows/Linux/macOS)
 
 ## System Requirements
 
-- Python 3.8+
-- PyQt5 for GUI
-- pyserial for Arduino communication
-- pytest for testing
+- **Python**: 3.8 or higher (tested up to 3.12)
+- **OS**: Windows, Linux, or macOS
+- **PyQt5**: For GUI interface
+- **pyserial**: For Arduino communication
+- **pytest**: For testing
 
 ## Installation
 
 ### Clone the repository
 ```bash
-git clone https://github.com/yourusername/fs-telemetry.git
+git clone https://github.com/marcle-bert26-ui/fs-telemetry.git
 cd fs-telemetry
 ```
 
