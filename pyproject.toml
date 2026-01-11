@@ -1,0 +1,81 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fs-telemetry"
+version = "1.0.0"
+description = "Real-time telemetry acquisition and analysis system for Formula Student vehicles"
+readme = "README_APP.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "Formula Student Community", email = "contact@formulastudent.com"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+]
+
+dependencies = [
+    "pyserial>=3.5",
+    "pytest>=7.4.3",
+    "pytest-cov>=4.1.0",
+]
+
+[project.optional-dependencies]
+gui = [
+    "PyQt5>=5.15.0",
+]
+
+dev = [
+    "pytest>=7.4.3",
+    "pytest-cov>=4.1.0",
+    "autopep8>=2.0.0",
+    "pylint>=2.16.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/fs-telemetry"
+Documentation = "https://github.com/yourusername/fs-telemetry#documentation"
+Repository = "https://github.com/yourusername/fs-telemetry.git"
+"Bug Tracker" = "https://github.com/yourusername/fs-telemetry/issues"
+
+[tool.setuptools]
+packages = ["acquisition", "parsing", "data", "log_handlers", "visualization", "gui", "replay"]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-v --strict-markers --tb=short"
+testpaths = ["tests"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+]
+
+[tool.coverage.run]
+source = ["."]
+omit = [
+    "*/tests/*",
+    "setup.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]

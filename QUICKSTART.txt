@@ -1,0 +1,119 @@
+"""
+Quick Reference Guide
+Quick setup and usage instructions
+"""
+
+# INSTALLATION (Copy & Paste)
+
+# Windows Command Prompt:
+git clone https://github.com/yourusername/fs-telemetry.git
+cd fs-telemetry
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+python app.py
+
+# Linux / macOS Terminal:
+git clone https://github.com/yourusername/fs-telemetry.git
+cd fs-telemetry
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python app.py
+
+
+# QUICK COMMANDS
+
+# Run GUI Application
+python app.py
+
+# Run CLI Live Mode
+python main.py
+
+# Run CLI Replay Mode
+python main.py    # Set SIMULATION_MODE = True in config.py
+
+# Run Tests
+pytest tests/ -v
+pytest tests/ --cov=.
+
+# Run Demo
+python test_main_demo.py
+
+
+# CONFIGURATION (Edit config.py)
+
+SERIAL_PORT = "COM3"          # Arduino port (COM3, /dev/ttyUSB0, etc)
+SERIAL_BAUDRATE = 115200      # Communication speed
+LOG_DIRECTORY = "data_logs"   # Where to save CSV files
+SIMULATION_MODE = False       # Set True for replay mode
+
+
+# TROUBLESHOOTING
+
+Problem: "ModuleNotFoundError: No module named 'PyQt5'"
+Solution: pip install PyQt5
+
+Problem: "Arduino not detected"
+Solution: 
+  1. Check Device Manager for port (Windows)
+  2. Run: ls /dev/tty* (Linux/macOS)
+  3. Update SERIAL_PORT in config.py
+
+Problem: "python: command not found"
+Solution:
+  1. Install Python from python.org
+  2. Add to PATH during installation
+  3. Or use full path: C:\Python312\python.exe
+
+
+# FILE LOCATIONS
+
+CSV Logs: data_logs/
+Test Files: tests/
+Configuration: config.py
+Main App: app.py
+CLI App: main.py
+
+
+# KEYBOARD SHORTCUTS
+
+N/A for GUI (use buttons)
+
+CLI Mode:
+Ctrl+C: Stop acquisition
+
+
+# DOCUMENTATION
+
+README.md - Main overview
+README_APP.md - Complete features
+INSTALL.md - Detailed installation
+CONTRIBUTING.md - Developer guide
+CHANGELOG.md - Version history
+setup.py - Installation configuration
+
+
+# DEFAULT VALUES
+
+Speed units: km/h
+RPM: revolutions per minute
+Throttle: 0-100 percent
+Temperature: Celsius
+CSV Delimiter: semicolon (;)
+Log Format: YYYYMMDD_HHMMSS_ffffff.csv
+
+
+# SUPPORT
+
+GitHub Issues: https://github.com/yourusername/fs-telemetry/issues
+Documentation: See *.md files in project root
+Tests: Run pytest tests/ -v
+
+
+# VERSION INFO
+
+Current Version: 1.0.0
+Python Required: 3.8+
+License: MIT
+Last Updated: 2026-01-11
