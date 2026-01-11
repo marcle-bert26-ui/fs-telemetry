@@ -1,0 +1,4 @@
+pyserial==3.5
+pytest==7.4.3
+pytest-cov==4.1.0
+# PyQt5 is mocked in CI/CD environments (conftest.py)
