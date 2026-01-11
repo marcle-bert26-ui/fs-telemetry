@@ -76,6 +76,67 @@ To find your Arduino port:
 python app.py
 ```
 
+### Windows: Standalone EXE
+
+If you prefer a standalone Windows executable (no Python required), a build is provided in `dist/FormulaTelementry.exe` when using the provided build scripts. To run the EXE:
+
+```cmd
+dist\FormulaTelementry.exe
+```
+
+To build the EXE locally (requires Python and PyInstaller):
+
+```cmd
+py -m pip install pyinstaller
+py -m PyInstaller --onefile --windowed --name FormulaTelementry --hidden-import=PyQt5 --hidden-import=pyserial app.py
+```
+
+The generated file will be at `dist\FormulaTelementry.exe`.
+
+You can distribute that EXE directly to other Windows users.
+
+---
+
+## Build Checklist for Linux
+
+- [ ] Install Python 3.8+ and pip
+- [ ] Create and activate a virtual environment
+- [ ] pip install -r requirements.txt (note: CI uses `requirements-ci.txt` without PyQt5)
+- [ ] Install `pyinstaller` and optional `appimagetool` for AppImage packaging
+- [ ] Build with PyInstaller on Linux runner:
+
+```bash
+python3 -m pip install pyinstaller
+python3 -m PyInstaller --onefile --name FormulaTelementry app.py
+```
+
+- [ ] (Optional) Create AppImage from the one-file binary or from a directory build
+
+Notes:
+- Linux builds should be produced on Linux (e.g., `ubuntu-latest` in GitHub Actions). Building on other OSes may produce incompatible binaries.
+
+---
+
+## Build Checklist for macOS
+
+- [ ] Use a macOS machine or `macos-latest` GitHub Actions runner
+- [ ] Install Python 3.8+ and pip
+- [ ] Create and activate a virtual environment
+- [ ] pip install -r requirements.txt
+- [ ] Install `pyinstaller` or `py2app` for native .app bundling
+- [ ] Build with PyInstaller on macOS runner:
+
+```bash
+python3 -m pip install pyinstaller
+python3 -m PyInstaller --onefile --name FormulaTelementry app.py
+```
+
+- [ ] To create a `.app` bundle use `py2app` or PyInstaller with `--windowed` and `--onedir`, then package to `.dmg` if desired.
+
+Notes:
+- macOS builds must be performed on macOS to be compatible with macOS users.
+- Code signing and notarization may be required for distribution to end users (Apple Developer account).
+
 ## Linux Installation
 
 ### Step 1: Install Python and Git
