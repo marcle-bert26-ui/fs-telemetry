@@ -149,22 +149,27 @@ def print_files_structure():
     fs-telemetry/
     ├── 📄 app.py                      # GUI entry point
     ├── 📄 main.py                     # CLI entry point
-    ├── 📄 review.py                   # Review mode (this display)
+    ├── 📄 tools/review.py             # Review mode (this display)
     ├── 📄 config.py                   # Configuration
     ├── 📄 setup.py                    # Package setup
-    ├── 📄 requirements.txt             # Dependencies
-    ├── 📄 requirements-ci.txt          # CI dependencies
+    ├── 📄 requirements.txt            # Dependencies
+    ├── 📄 requirements-ci.txt         # CI dependencies
     ├── 📄 pyrightconfig.json          # Type checking
     │
-    ├── 📚 Documentation/
-    │   ├── README.md                  # Main README
-    │   ├── README_EN.md               # English docs
-    │   ├── README_FR.md               # French docs
-    │   ├── README_APP.md              # Feature details
-    │   ├── INSTALL.md                 # Setup guide
-    │   ├── CONTRIBUTING.md            # Dev guidelines
-    │   ├── CHANGELOG.md               # Version history
-    │   └── PROJECT_SUMMARY.md         # Full summary
+    ├── 📚 docs/
+    │   ├── README.md                 # Main README
+    │   ├── README_EN.md              # English docs
+    │   ├── README_FR.md              # French docs
+    │   ├── README_APP.md             # Feature details
+    │   ├── INSTALL.md                # Setup guide
+    │   ├── CONTRIBUTING.md           # Dev guidelines
+    │   ├── CHANGELOG.md              # Version history
+    │   └── PROJECT_SUMMARY.md        # Full summary
+    │
+    ├── 🛠 tools/
+    │   ├── build_exe.py               # Build helpers
+    │   ├── review.py                  # Project review
+    │   └── scripts/                   # Misc scripts
     │
     ├── 🐍 Modules/
     │   ├── acquisition/               # Data sources
@@ -183,10 +188,8 @@ def print_files_structure():
     │   ├── conftest.py                # Pytest config
     │   └── sample_data.csv
     │
-    ├── 🤖 CI/CD/
-    │   └── .github/
-    │       └── workflows/
-    │           └── tests.yml          # GitHub Actions
+    ├── 📁 examples/
+    │   └── arduino_example.ino
     │
     └── 📌 Support/
         ├── .gitignore

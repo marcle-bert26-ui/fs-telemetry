@@ -6,7 +6,7 @@
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Language** • [English](README_EN.md) | [Français](README_FR.md)
+**Language** • [English](docs/README_EN.md) | [Français](docs/README_FR.md)
 
 ---
 
@@ -67,8 +67,8 @@ python tools/review.py     # Project review (moved to tools/)
 
 Choose your language:
 
-- **[English Documentation](README_EN.md)** - Complete guide in English
-- **[Documentation Française](README_FR.md)** - Guide complet en français
+- **[English Documentation](docs/README_EN.md)** - Complete guide in English
+- **[Documentation Française](docs/README_FR.md)** - Guide complet en français
 
 ---
 
