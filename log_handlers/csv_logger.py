@@ -14,6 +14,8 @@ class CSVLogger:
     Logs telemetry data to CSV files with proper formatting and headers.
     """
     
+    _file_counter = 0  # Class variable to ensure unique filenames
+    
     def __init__(self, filename: str = None):
         """
         Initialize CSV logger.
@@ -31,9 +33,11 @@ class CSVLogger:
         self._init_file()
     
     def _generate_filename(self) -> str:
-        """Generate unique filename with timestamp."""
+        """Generate unique filename with timestamp and counter."""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S%f")
-        return f"{config.LOG_FILENAME_PREFIX}_{timestamp}.csv"
+        CSVLogger._file_counter += 1
+        counter = CSVLogger._file_counter
+        return f"{config.LOG_FILENAME_PREFIX}_{timestamp}_{counter}.csv"
     
     def _init_file(self):
         """Create and initialize CSV file with header."""
