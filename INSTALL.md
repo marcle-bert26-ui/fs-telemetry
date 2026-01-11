@@ -76,12 +76,14 @@ To find your Arduino port:
 python app.py
 ```
 
-### Windows: Standalone EXE
+Windows: Standalone EXE
 
-If you prefer a standalone Windows executable (no Python required), a build is provided in `dist/FormulaTelementry.exe` when using the provided build scripts. To run the EXE:
+If you prefer a standalone Windows executable (no Python required), a build can be placed in `executables/FormulaTelementry.exe` using the provided build scripts in `tools/`.
+
+To run the bundled EXE shipped in the repository:
 
 ```cmd
-dist\FormulaTelementry.exe
+executables\FormulaTelementry.exe
 ```
 
 To build the EXE locally (requires Python and PyInstaller):
@@ -91,9 +93,7 @@ py -m pip install pyinstaller
 py -m PyInstaller --onefile --windowed --name FormulaTelementry --hidden-import=PyQt5 --hidden-import=pyserial app.py
 ```
 
-The generated file will be at `dist\FormulaTelementry.exe`.
-
-You can distribute that EXE directly to other Windows users.
+The generated file will be at `dist\FormulaTelementry.exe` — you can then move it into `executables\` for distribution, or run the provided `tools\build_exe.bat` to automate this step locally.
 
 ---
 

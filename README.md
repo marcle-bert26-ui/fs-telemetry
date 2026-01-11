@@ -14,12 +14,12 @@
 
 | Document | Purpose | Language |
 |----------|---------|----------|
-| [README_EN.md](README_EN.md) | Main documentation | English |
-| [README_FR.md](README_FR.md) | Documentation complète | Français |
-| [README_APP.md](README_APP.md) | Feature details | English |
+| [README_EN.md](docs/README_EN.md) | Main documentation | English |
+| [README_FR.md](docs/README_FR.md) | Documentation complète | Français |
+| [README_APP.md](docs/README_APP.md) | Feature details | English |
 | [INSTALL.md](INSTALL.md) | Installation guide | English |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Developer guide | English |
-| [CHANGELOG.md](CHANGELOG.md) | Version history | English |
+| [CHANGELOG.md](docs/CHANGELOG.md) | Version history | English |
 
 ---
 
@@ -47,7 +47,7 @@ pip install -r requirements.txt
 ```bash
 python app.py        # GUI mode (LIVE/REPLAY)
 python main.py       # CLI mode
-python review.py     # Project review
+python tools/review.py     # Project review (moved to tools/)
 ```
 
 ---
