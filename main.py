@@ -127,7 +127,8 @@ def main():
         # In simulation mode, ask which CSV file to replay
         csv_file = input("Enter CSV file path to replay (or press Enter for default): ").strip()
         if not csv_file:
-            csv_file = "data_logs/run_latest.csv"
+            # Default to sample test data
+            csv_file = "tests/sample_data.csv"
         main_replay(csv_file)
     else:
         # Live mode - read from Arduino
