@@ -18,7 +18,7 @@ setup(
     description="Real-time telemetry acquisition and analysis system for Formula Student vehicles",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/fs-telemetry",
+    url="https://github.com/marcle-bert26-ui/fs-telemetry",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 4 - Beta",

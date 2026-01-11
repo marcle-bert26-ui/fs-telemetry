@@ -202,9 +202,10 @@ Ce projet est sous licence **MIT** - voir [LICENSE](LICENSE) pour plus de détai
 
 ## 🔗 Liens
 
-- [Dépôt GitHub](https://github.com/votrenom/fs-telemetry)
-- [Signaler des Problèmes](https://github.com/votrenom/fs-telemetry/issues)
-- [Discussions](https://github.com/votrenom/fs-telemetry/discussions)
+- [Dépôt GitHub](https://github.com/marcle-bert26-ui/fs-telemetry)
+- [Signaler des Problèmes](https://github.com/marcle-bert26-ui/fs-telemetry/issues)
+- [Discussions](https://github.com/marcle-bert26-ui/fs-telemetry/discussions)
+- [Site Web](https://eigsiformulateam.fr/)
 - [Formula Student](https://www.formulastudent.com/)
 
 ---
@@ -272,7 +273,7 @@ Parfait pour les étudiants et développeurs apprenant Python en conditions rée
 Besoin d'aide ?
 1. Vérifier [INSTALL.md](INSTALL.md) pour les problèmes courants
 2. Consulter [README_APP.md](README_APP.md) pour les fonctionnalités
-3. Ouvrir un [problème sur GitHub](https://github.com/votrenom/fs-telemetry/issues)
+3. Ouvrir un [problème sur GitHub](https://github.com/marcle-bert26-ui/fs-telemetry/issues)
 
 ---
 

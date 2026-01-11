@@ -203,9 +203,10 @@ This project is licensed under the **MIT License** - see [LICENSE](LICENSE) for 
 
 ## 🔗 Links
 
-- [Project GitHub](https://github.com/yourusername/fs-telemetry)
-- [Issues & Bugs](https://github.com/yourusername/fs-telemetry/issues)
-- [Discussions](https://github.com/yourusername/fs-telemetry/discussions)
+- [Project GitHub](https://github.com/marcle-bert26-ui/fs-telemetry)
+- [Issues & Bugs](https://github.com/marcle-bert26-ui/fs-telemetry/issues)
+- [Discussions](https://github.com/marcle-bert26-ui/fs-telemetry/discussions)
+- [Website](https://eigsiformulateam.fr/)
 - [Formula Student](https://www.formulastudent.com/)
 
 ---
