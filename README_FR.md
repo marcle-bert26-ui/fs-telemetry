@@ -2,6 +2,10 @@
 
 🏎️ Application professionnelle de télémétrie en temps réel pour véhicules Formula Student.
 
+[![Tests](https://github.com/marcle-bert26-ui/fs-telemetry/actions/workflows/tests.yml/badge.svg)](https://github.com/marcle-bert26-ui/fs-telemetry/actions/workflows/tests.yml)
+[![Python 3.8+](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
+[![Licence: MIT](https://img.shields.io/badge/Licence-MIT-yellow.svg)](LICENSE)
+
 **[Documentation Complète](README_APP.md)** • **[Guide d'Installation](INSTALL.md)** • **[Contribution](CONTRIBUTING.md)** • **[Historique](CHANGELOG.md)**
 
 ---
@@ -64,7 +68,7 @@ python app.py
 ### Installation Rapide
 ```bash
 # Cloner le dépôt
-git clone https://github.com/votrenom/fs-telemetry.git
+git clone https://github.com/marcle-bert26-ui/fs-telemetry.git
 cd fs-telemetry
 
 # Créer un environnement virtuel

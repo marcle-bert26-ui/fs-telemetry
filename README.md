@@ -2,6 +2,10 @@
 
 🏎️ Professional real-time telemetry data acquisition and analysis application for Formula Student vehicles.
 
+[![Tests](https://github.com/marcle-bert26-ui/fs-telemetry/actions/workflows/tests.yml/badge.svg)](https://github.com/marcle-bert26-ui/fs-telemetry/actions/workflows/tests.yml)
+[![Python 3.8+](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 **Language** • [English](README_EN.md) | [Français](README_FR.md)
 
 ---
@@ -23,7 +27,7 @@
 
 ### 1. Clone & Setup
 ```bash
-git clone https://github.com/yourusername/fs-telemetry.git
+git clone https://github.com/marcle-bert26-ui/fs-telemetry.git
 cd fs-telemetry
 python -m venv venv
 ```
@@ -69,8 +73,8 @@ Choose your language:
 ## 📞 Support
 
 - 📖 Read [INSTALL.md](INSTALL.md) for setup help
-- 🐛 Report issues on [GitHub Issues](https://github.com/yourusername/fs-telemetry/issues)
-- 💬 Discuss on [GitHub Discussions](https://github.com/yourusername/fs-telemetry/discussions)
+- 🐛 Report issues on [GitHub Issues](https://github.com/marcle-bert26-ui/fs-telemetry/issues)
+- 💬 Discuss on [GitHub Discussions](https://github.com/marcle-bert26-ui/fs-telemetry/discussions)
 
 ---
 
