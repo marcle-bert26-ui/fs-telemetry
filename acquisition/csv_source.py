@@ -26,9 +26,9 @@ class CSVSource(TelemetrySource):
         """Open and read CSV file."""
         try:
             self.file = open(self.filename, 'r')
-            print(f"✓ Opened CSV file: {self.filename}")
+            print(f"+ Opened CSV file: {self.filename}")
         except FileNotFoundError as e:
-            print(f"✗ File not found: {e}")
+            print(f"X File not found: {e}")
             raise
     
     def read(self) -> str:
@@ -46,7 +46,7 @@ class CSVSource(TelemetrySource):
                 self.line_count += 1
             return line
         except Exception as e:
-            print(f"⚠️  CSV read error: {e}")
+            print(f"! CSV read error: {e}")
             return ""
     
     def is_connected(self) -> bool:

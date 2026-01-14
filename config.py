@@ -12,7 +12,7 @@ LOG_DIRECTORY = "data_logs"
 LOG_FILENAME_PREFIX = "run"
 
 # Simulation / Replay Mode
-SIMULATION_MODE = False  # Set to True to replay from CSV instead of reading Arduino
+SIMULATION_MODE = True  # Set to True to replay from CSV instead of reading Arduino
 
 # CSV Format
 CSV_DELIMITER = ";"

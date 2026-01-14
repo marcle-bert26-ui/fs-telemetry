@@ -46,9 +46,9 @@ class CSVLogger:
             self.writer = csv.writer(self.file, delimiter=config.CSV_DELIMITER)
             self.writer.writerow(config.CSV_HEADER)
             self.file.flush()
-            print(f"✓ Logging to: {self.filepath}")
+            print(f"+ Logging to: {self.filepath}")
         except IOError as e:
-            print(f"✗ Failed to create log file: {e}")
+            print(f"X Failed to create log file: {e}")
             raise
     
     def log(self, data: TelemetryData):
@@ -58,7 +58,7 @@ class CSVLogger:
         :param data: TelemetryData object to log
         """
         if self.writer is None:
-            print("⚠️  Logger not initialized")
+            print("! Logger not initialized")
             return
         
         try:
@@ -71,10 +71,10 @@ class CSVLogger:
             ])
             self.file.flush()
         except Exception as e:
-            print(f"⚠️  Logging error: {e}")
+            print(f"! Logging error: {e}")
     
     def close(self):
         """Close and finalize the CSV file."""
         if self.file and not self.file.closed:
             self.file.close()
-            print(f"✓ Log file saved: {self.filepath}")
+            print(f"+ Log file saved: {self.filepath}")

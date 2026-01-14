@@ -8,9 +8,29 @@
 
 **[Documentation Complète](README_APP.md)** • **[Guide d'Installation](INSTALL.md)** • **[Contribution](CONTRIBUTING.md)** • **[Historique](CHANGELOG.md)**
 
+
 ---
 
-## ✨ Caractéristiques
+## 💡 Améliorations possibles
+
+Le projet fonctionne pour l'acquisition, la lecture et l'analyse de base, mais plusieurs améliorations peuvent apporter plus d'ergonomie, de puissance d'analyse et faciliter la distribution. Voici des suggestions (bonnes premières issues) et des évolutions à fort impact.
+
+- **Comparaison multi-session** : comparer côte à côte ou en superposition des sessions, traces delta, alignement automatique des tours/secteurs.
+- **Interface améliorée** : thèmes modernes, mise en page réactive, contrôles plus fluides ; intégrer `pyqtgraph` ou `plotly` pour des graphiques interactifs.
+- **Branding & visuels** : ajouter le logo de l'équipe, des icônes, et un jeu de couleurs thématique ; générer des rapports PDF prêts à imprimer.
+- **Formats d'export** : JSON, Excel (`.xlsx`), archives compressées et export GPX/KML pour données GPS.
+- **Analytique avancée** : détection automatique des tours, alignement de télémétrie, fusion de capteurs, métriques dérivées (puissance, énergie, forces G), et détection d'anomalies.
+- **Extensions / importeurs** : support de sources additionnelles (CAN, OBD-II) et architecture de plugins pour étendre parsers et visualisations.
+- **Dashboards temps réel & streaming** : tracés basse latence, mises en page dashboard, et streaming WebSocket pour supervision à distance.
+- **Packaging & installateurs** : créér des installateurs signés et artefacts CI (NSIS pour Windows, AppImage/.deb pour Linux, DMG signé pour macOS) et publier automatiquement les releases.
+- **Localisation & accessibilité** : traductions, navigation clavier, thèmes haute-contraste et compatibilité lecteur d'écran.
+- **Tests de charge & fuzzing** : tests de montée en charge pour haut débit (stress), contrôles de performance dans CI et profilage.
+
+Comment aider : choisissez une des propositions, ouvrez une issue et soumettez une PR — des changements petits et ciblés (polissage de l'UI, un seul format d'export, ou un plugin) sont les bienvenus.
+
+---
+
+## 🎓 Valeur Pédagogique
 
 ### 🟢 MODE EN DIRECT
 - Acquisition de données Arduino en temps réel

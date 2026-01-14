@@ -49,8 +49,6 @@ htmlcov/
 
 # Data logs
 data_logs/
-*.csv
-!tests/sample_data.csv
 
 # OS
 .DS_Store

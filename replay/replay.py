@@ -17,7 +17,7 @@ def replay_csv(filename: str) -> Iterator[Dict[str, str]]:
     filepath = Path(filename)
     
     if not filepath.exists():
-        print(f"✗ File not found: {filepath}")
+        print(f"X File not found: {filepath}")
         return
     
     try:
@@ -29,4 +29,4 @@ def replay_csv(filename: str) -> Iterator[Dict[str, str]]:
                 yield row
                 
     except Exception as e:
-        print(f"✗ Replay error: {e}")
+        print(f"X Replay error: {e}")

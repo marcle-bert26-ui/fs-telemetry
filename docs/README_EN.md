@@ -261,6 +261,25 @@ Perfect for students and developers learning real-world Python!
 
 ---
 
+## 💡 Future Improvements
+
+The project is functionally complete for basic acquisition, replay and analysis, but there are many practical enhancements that would improve usability, analysis power and distribution. Below are suggested additions (good first issues) and higher-impact features to consider.
+
+- **Multi-session comparison**: side-by-side and overlay comparisons, delta traces, aligned lap/sector comparison and automatic session matching.
+- **Improved UI / UX**: modern themes, responsive layouts, smoother controls and improved file dialogs; consider `pyqtgraph` or `plotly` for interactive charts.
+- **Branding & visuals**: add a team logo, icons, themed color scheme, and exportable report templates (PDF).
+- **Export formats**: JSON, Excel (`.xlsx`), compressed archives and GPX/KML exports for mapping data.
+- **Advanced analytics**: automatic lap detection, telemetry alignment, sensor fusion, derived metrics (power, energy, lateral/longitudinal G), and anomaly detection.
+- **Plugin/importers**: support for additional telemetry sources (CAN, OBD-II) and a plugin system to extend parsers and visualizations.
+- **Realtime dashboards & streaming**: low-latency plots, dashboard layouts, and optional WebSocket streaming for remote monitoring.
+- **Packaging & installers**: provide signed installers and CI-built artifacts (NSIS for Windows, AppImage/.deb for Linux, signed DMG for macOS) and publish releases automatically.
+- **Localization & accessibility**: translations, keyboard navigation, high-contrast themes and screen-reader friendliness.
+- **Automated benchmarks & telemetry fuzzing**: stress tests for high-rate data, CI performance checks and profiling.
+
+How to help: pick an item above, open an issue, and submit a PR — small, focused changes (UI polish, a single export format, or a plugin) are very welcome.
+
+---
+
 ## 🎯 Roadmap
 
 ### Version 1.1.0 (Planned)

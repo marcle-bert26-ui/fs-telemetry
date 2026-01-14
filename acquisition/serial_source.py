@@ -34,9 +34,9 @@ class SerialSource(TelemetrySource):
                 baudrate=self.baudrate,
                 timeout=self.timeout
             )
-            print(f"✓ Connected to Arduino on {self.port}")
+            print(f"+ Connected to Arduino on {self.port}")
         except serial.SerialException as e:
-            print(f"✗ Failed to connect: {e}")
+            print(f"X Failed to connect: {e}")
             raise
     
     def read(self) -> str:
@@ -52,7 +52,7 @@ class SerialSource(TelemetrySource):
             line = self.ser.readline().decode(errors='ignore').strip()
             return line
         except Exception as e:
-            print(f"⚠️  Serial read error: {e}")
+            print(f"! Serial read error: {e}")
             return ""
     
     def is_connected(self) -> bool:

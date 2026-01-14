@@ -24,7 +24,9 @@ def main():
     
     # Create and show main window
     window = MainWindow()
-    window.show()
+    
+    # Show in fullscreen mode
+    window.showFullScreen()
     
     sys.exit(app.exec_())
 
