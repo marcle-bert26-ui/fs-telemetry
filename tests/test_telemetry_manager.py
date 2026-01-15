@@ -24,7 +24,20 @@ class TestTelemetryManager:
             speed=50.0,
             rpm=5000,
             throttle=75.0,
-            battery_temp=60.0
+            battery_temp=60.0,
+            g_force_lat=0.0,
+            g_force_long=0.0,
+            g_force_vert=1.0,
+            acceleration_x=0.0,
+            acceleration_y=0.0,
+            acceleration_z=0.0,
+            gps_latitude=0.0,
+            gps_longitude=0.0,
+            gps_altitude=0.0,
+            tire_temp_fl=0.0,
+            tire_temp_fr=0.0,
+            tire_temp_rl=0.0,
+            tire_temp_rr=0.0
         )
     
     def test_manager_initialization(self, manager):
@@ -43,19 +56,32 @@ class TestTelemetryManager:
     
     def test_multiple_updates(self, manager, sample_data):
         """Test updating with multiple data points"""
-        for i in range(5):
+        for i in range(10):
             data = TelemetryData(
                 time_ms=1000 + i*100,
                 speed=50.0 + i,
                 rpm=5000 + i*100,
                 throttle=75.0,
-                battery_temp=60.0 + i*0.5
+                battery_temp=60.0 + i*0.5,
+                g_force_lat=0.0,
+                g_force_long=0.0,
+                g_force_vert=1.0,
+                acceleration_x=0.0,
+                acceleration_y=0.0,
+                acceleration_z=0.0,
+                gps_latitude=0.0,
+                gps_longitude=0.0,
+                gps_altitude=0.0,
+                tire_temp_fl=0.0,
+                tire_temp_fr=0.0,
+                tire_temp_rl=0.0,
+                tire_temp_rr=0.0
             )
             manager.update(data)
         
-        assert manager.update_count == 5
-        assert len(manager.history) == 5
-        assert manager.current.time_ms == 1400
+        assert manager.update_count == 10
+        assert len(manager.history) == 10
+        assert manager.current.time_ms == 1900
     
     def test_get_current(self, manager, sample_data):
         """Test getting current data"""
@@ -68,9 +94,66 @@ class TestTelemetryManager:
     def test_get_history(self, manager):
         """Test getting history"""
         data_list = [
-            TelemetryData(1000, 50.0, 5000, 75.0, 60.0),
-            TelemetryData(2000, 55.0, 5500, 80.0, 61.0),
-            TelemetryData(3000, 60.0, 6000, 85.0, 62.0),
+            TelemetryData(
+                time_ms=1000,
+                speed=50.0,
+                rpm=5000,
+                throttle=75.0,
+                battery_temp=60.0,
+                g_force_lat=0.0,
+                g_force_long=0.0,
+                g_force_vert=1.0,
+                acceleration_x=0.0,
+                acceleration_y=0.0,
+                acceleration_z=0.0,
+                gps_latitude=0.0,
+                gps_longitude=0.0,
+                gps_altitude=0.0,
+                tire_temp_fl=0.0,
+                tire_temp_fr=0.0,
+                tire_temp_rl=0.0,
+                tire_temp_rr=0.0
+            ),
+            TelemetryData(
+                time_ms=2000,
+                speed=55.0,
+                rpm=5500,
+                throttle=80.0,
+                battery_temp=61.0,
+                g_force_lat=0.0,
+                g_force_long=0.0,
+                g_force_vert=1.0,
+                acceleration_x=0.0,
+                acceleration_y=0.0,
+                acceleration_z=0.0,
+                gps_latitude=0.0,
+                gps_longitude=0.0,
+                gps_altitude=0.0,
+                tire_temp_fl=0.0,
+                tire_temp_fr=0.0,
+                tire_temp_rl=0.0,
+                tire_temp_rr=0.0
+            ),
+            TelemetryData(
+                time_ms=3000,
+                speed=60.0,
+                rpm=6000,
+                throttle=85.0,
+                battery_temp=62.0,
+                g_force_lat=0.0,
+                g_force_long=0.0,
+                g_force_vert=1.0,
+                acceleration_x=0.0,
+                acceleration_y=0.0,
+                acceleration_z=0.0,
+                gps_latitude=0.0,
+                gps_longitude=0.0,
+                gps_altitude=0.0,
+                tire_temp_fl=0.0,
+                tire_temp_fr=0.0,
+                tire_temp_rl=0.0,
+                tire_temp_rr=0.0
+            )
         ]
         
         for data in data_list:
@@ -84,7 +167,26 @@ class TestTelemetryManager:
     def test_get_history_count(self, manager):
         """Test getting history count"""
         for i in range(10):
-            data = TelemetryData(i*100, 50.0, 5000, 75.0, 60.0)
+            data = TelemetryData(
+                time_ms=i*100,
+                speed=50.0,
+                rpm=5000,
+                throttle=75.0,
+                battery_temp=60.0,
+                g_force_lat=0.0,
+                g_force_long=0.0,
+                g_force_vert=1.0,
+                acceleration_x=0.0,
+                acceleration_y=0.0,
+                acceleration_z=0.0,
+                gps_latitude=0.0,
+                gps_longitude=0.0,
+                gps_altitude=0.0,
+                tire_temp_fl=0.0,
+                tire_temp_fr=0.0,
+                tire_temp_rl=0.0,
+                tire_temp_rr=0.0
+            )
             manager.update(data)
         
         assert manager.get_history_count() == 10
@@ -116,7 +218,20 @@ class TestTelemetryManager:
                 speed=speed,
                 rpm=rpm,
                 throttle=50.0,
-                battery_temp=temp
+                battery_temp=temp,
+                g_force_lat=0.0,
+                g_force_long=0.0,
+                g_force_vert=1.0,
+                acceleration_x=0.0,
+                acceleration_y=0.0,
+                acceleration_z=0.0,
+                gps_latitude=0.0,
+                gps_longitude=0.0,
+                gps_altitude=0.0,
+                tire_temp_fl=0.0,
+                tire_temp_fr=0.0,
+                tire_temp_rl=0.0,
+                tire_temp_rr=0.0
             )
             manager.update(data)
         
@@ -138,11 +253,31 @@ class TestTelemetryManager:
         
         assert manager.update_count == 1  # Still 1, not 2
         assert len(manager.history) == 1
+        assert manager.current is not None
     
     def test_clear_history(self, manager):
         """Test clearing history"""
         for i in range(5):
-            data = TelemetryData(i*100, 50.0, 5000, 75.0, 60.0)
+            data = TelemetryData(
+                time_ms=i*100,
+                speed=50.0,
+                rpm=5000,
+                throttle=75.0,
+                battery_temp=60.0,
+                g_force_lat=0.0,
+                g_force_long=0.0,
+                g_force_vert=1.0,
+                acceleration_x=0.0,
+                acceleration_y=0.0,
+                acceleration_z=0.0,
+                gps_latitude=0.0,
+                gps_longitude=0.0,
+                gps_altitude=0.0,
+                tire_temp_fl=0.0,
+                tire_temp_fr=0.0,
+                tire_temp_rl=0.0,
+                tire_temp_rr=0.0
+            )
             manager.update(data)
         
         assert manager.get_history_count() == 5

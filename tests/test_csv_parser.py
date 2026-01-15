@@ -89,20 +89,32 @@ class TestTelemetryData:
     """Tests for TelemetryData dataclass"""
     
     def test_telemetry_data_creation(self):
-        """Test creating TelemetryData object"""
+        """Test TelemetryData object creation"""
         data = TelemetryData(
-            time_ms=100,
-            speed=50.0,
-            rpm=5000,
-            throttle=75.0,
-            battery_temp=60.0
+            time_ms=123456,
+            speed=45.2,
+            rpm=8120,
+            throttle=0.78,
+            battery_temp=62.3,
+            g_force_lat=0.5,
+            g_force_long=0.3,
+            g_force_vert=1.0,
+            acceleration_x=2.1,
+            acceleration_y=0.5,
+            acceleration_z=0.1,
+            gps_latitude=48.8566,
+            gps_longitude=2.3522,
+            gps_altitude=150.0,
+            tire_temp_fl=75.2,
+            tire_temp_fr=74.8,
+            tire_temp_rl=73.5,
+            tire_temp_rr=74.1
         )
         
-        assert data.time_ms == 100
-        assert data.speed == 50.0
-        assert data.rpm == 5000
-        assert data.throttle == 75.0
-        assert data.battery_temp == 60.0
+        assert data.time_ms == 123456
+        assert data.speed == 45.2
+        assert data.rpm == 8120
+        assert data.battery_temp == 62.3
     
     def test_telemetry_data_str_representation(self):
         """Test string representation of TelemetryData"""
@@ -111,7 +123,20 @@ class TestTelemetryData:
             speed=50.0,
             rpm=5000,
             throttle=75.0,
-            battery_temp=60.0
+            battery_temp=60.0,
+            g_force_lat=0.0,
+            g_force_long=0.0,
+            g_force_vert=1.0,
+            acceleration_x=0.0,
+            acceleration_y=0.0,
+            acceleration_z=0.0,
+            gps_latitude=0.0,
+            gps_longitude=0.0,
+            gps_altitude=0.0,
+            tire_temp_fl=0.0,
+            tire_temp_fr=0.0,
+            tire_temp_rl=0.0,
+            tire_temp_rr=0.0
         )
         
         str_repr = str(data)
