@@ -12,7 +12,7 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
 
 setup(
     name="fs-telemetry",
-    version="1.0.0",
+    version="2.1.0",
     author="Formula Student Community",
     author_email="contact@formulastudent.com",
     description="Real-time telemetry acquisition and analysis system for Formula Student vehicles",

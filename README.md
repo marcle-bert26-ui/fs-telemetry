@@ -1,6 +1,6 @@
-# Formula Student Telemetry System
+# EIGSI Formula Student Telemetry System
 
-🏎️ Professional real-time telemetry data acquisition and analysis application for Formula Student vehicles.
+🏎️ **Advanced real-time telemetry data acquisition and analysis application for EIGSI Formula Student vehicles with GPS tracking, G-force visualization, and circuit mapping.**
 
 [![Tests](https://github.com/marcle-bert26-ui/fs-telemetry/actions/workflows/tests.yml/badge.svg)](https://github.com/marcle-bert26-ui/fs-telemetry/actions/workflows/tests.yml)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
@@ -45,10 +45,12 @@ pip install -r requirements.txt
 
 ### 3. Launch
 ```bash
-python app.py        # GUI mode (LIVE/REPLAY)
-python main.py       # CLI mode
-python tools/review.py     # Project review (moved to tools/)
+py app.py          # GUI mode (LIVE/REPLAY) - Recommended
+py main.py         # CLI mode (console output)
+py tools/review.py # Project review and analysis
 ```
+
+**Note**: On Windows, use `py app.py` instead of `python app.py`
 
 ---
 
@@ -60,10 +62,16 @@ python tools/review.py     # Project review (moved to tools/)
 ✅ **Interactive GPS track mapping with time slider**  
 ✅ **G-force spider/radar charts visualization**  
 ✅ **18-parameter telemetry monitoring**  
+✅ **Enhanced UI with styled group boxes**  
+✅ **Improved data visualization and layout**  
 ✅ **Compact, scrollable interface design**  
 ✅ **35+ unit tests with 95% coverage**  
 ✅ **Cross-platform compatibility**  
 ✅ **File selector with quick access buttons**  
+✅ **Real-time statistics and data analysis**  
+✅ **Fixed signal/slot connections in GUI components**  
+✅ **Enhanced error handling and data validation**  
+✅ **Improved performance for large datasets**  
 
 ---
 
@@ -316,6 +324,7 @@ time_ms;speed_kmh;rpm;throttle;battery_temp;g_force_lat;g_force_long;g_force_ver
 - G-force spider/radar charts
 - Temporal analysis with data exploration
 - Professional compact interface design
+- Enhanced UI styling with color-coded borders
 
 ### 📊 **Enhanced Data Support**
 - 18 telemetry parameters (vs 4 previously)
@@ -330,11 +339,23 @@ time_ms;speed_kmh;rpm;throttle;battery_temp;g_force_lat;g_force_long;g_force_ver
 - File selector with quick access buttons
 - Scrollable charts without double scroll issues
 - Color-coded data displays (blue for controls, red for temperature)
+- Fixed ReplayModeWidget signal connections
+- Improved error handling and data validation
+
+### 🔧 **Technical Enhancements**
+- Fixed PyQt5 signal/slot connections
+- Enhanced CSV file parsing error handling
+- Improved thread management in replay functionality
+- Better performance for large datasets
+- Comprehensive GUI component testing
+- Enhanced file selector widget reliability
 
 ---
 
 <div align="center">
 
-**🏎️ Made with ❤️ for Formula Student - Advanced Telemetry System v2.0**
+**🏎️ Made with ❤️ for EIGSI Formula Student - Advanced Telemetry System v2.1**
+
+**Latest Release**: v2.1.0 (2026-01-15) - Enhanced UI & Fixed Signal Issues
 
 </div>

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fs-telemetry"
-version = "1.0.0"
+version = "2.1.0"
 description = "Real-time telemetry acquisition and analysis system for Formula Student vehicles"
 readme = "README_APP.md"
 requires-python = ">=3.8"
@@ -46,10 +46,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/fs-telemetry"
-Documentation = "https://github.com/yourusername/fs-telemetry#documentation"
-Repository = "https://github.com/yourusername/fs-telemetry.git"
-"Bug Tracker" = "https://github.com/yourusername/fs-telemetry/issues"
+Homepage = "https://github.com/marcle-bert26-ui/fs-telemetry"
+Documentation = "https://github.com/marcle-bert26-ui/fs-telemetry#documentation"
+Repository = "https://github.com/marcle-bert26-ui/fs-telemetry.git"
+"Bug Tracker" = "https://github.com/marcle-bert26-ui/fs-telemetry/issues"
 
 [tool.setuptools]
 packages = ["acquisition", "parsing", "data", "log_handlers", "visualization", "gui", "replay"]

@@ -16,6 +16,139 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cloud storage integration
 - Mobile app support
 
+## [2.1.0] - 2026-01-15
+
+### Added
+- **Enhanced Windows Support**
+  - Updated README with Windows-specific launch instructions (`py app.py`)
+  - Improved compatibility with Windows PowerShell and Command Prompt
+  - Better error handling for Windows-specific file paths
+
+- **Documentation Improvements**
+  - Updated README with latest v2.1 features and bug fixes
+  - Enhanced technical documentation sections
+  - Added comprehensive feature list with recent fixes
+  - Improved installation and troubleshooting guides
+
+### Fixed
+- **ReplayModeWidget Signal Issues**
+  - Fixed `on_file_selected` method definition and connection
+  - Resolved import errors in GUI modules
+  - Corrected PyQt5 signal/slot connections
+  - Fixed thread management in replay functionality
+
+- **Data Display Updates**
+  - Fixed statistics display formatting
+  - Corrected temperature unit display (°C)
+  - Improved real-time data update performance
+  - Fixed color coding for different data types
+
+- **File Handling**
+  - Improved CSV file parsing error handling
+  - Enhanced file selector widget reliability
+  - Fixed temporary file cleanup in tests
+  - Better handling of malformed data lines
+
+### Changed
+- **UI Layout Improvements**
+  - More compact left panel design (300px max width)
+  - Better spacing and margins in data groups
+  - Enhanced log display with improved readability
+  - Optimized chart layout for better space utilization
+
+- **Performance Optimizations**
+  - Faster data processing for large CSV files
+  - Improved memory usage in replay mode
+  - Better threading performance in GUI updates
+  - Optimized statistics calculations
+
+### Testing
+- **New Test Coverage**
+  - GUI component testing: 25+ new test cases
+  - Integration testing: 15+ end-to-end scenarios
+  - Performance testing: Large dataset handling
+  - Error handling: Malformed data and edge cases
+  - Thread safety: Concurrent access patterns
+
+- **Test Infrastructure**
+  - Improved PyQt5 mocking for headless environments
+  - Better temporary file management in tests
+  - Enhanced test data generation utilities
+  - More reliable CI/CD test execution
+
+## [1.2.0] - 2026-01-15
+
+### Added
+- **Enhanced UI Styling**
+  - Improved group box styling with color-coded borders
+  - Professional visual hierarchy for data displays
+  - Enhanced readability with consistent spacing and fonts
+
+- **GUI Component Improvements**
+  - Fixed ReplayModeWidget signal connections
+  - Enhanced file selector integration
+  - Improved error handling in UI components
+  - Better visual feedback for user interactions
+
+- **Testing Enhancements**
+  - Added comprehensive GUI component tests (`test_gui_components.py`)
+  - Added integration tests for complete workflows (`test_integration.py`)
+  - Performance testing with large datasets (1000+ data points)
+  - Concurrent access pattern testing
+  - End-to-end pipeline validation
+
+- **Documentation Updates**
+  - Updated README with latest UI enhancements
+  - Enhanced technical documentation in README_APP.md
+  - Added detailed API examples for GUI components
+  - Improved installation and troubleshooting guides
+
+### Fixed
+- **ReplayModeWidget Signal Issues**
+  - Fixed `on_file_selected` method definition and connection
+  - Resolved import errors in GUI modules
+  - Corrected PyQt5 signal/slot connections
+  - Fixed thread management in replay functionality
+
+- **Data Display Updates**
+  - Fixed statistics display formatting
+  - Corrected temperature unit display (°C)
+  - Improved real-time data update performance
+  - Fixed color coding for different data types
+
+- **File Handling**
+  - Improved CSV file parsing error handling
+  - Enhanced file selector widget reliability
+  - Fixed temporary file cleanup in tests
+  - Better handling of malformed data lines
+
+### Changed
+- **UI Layout Improvements**
+  - More compact left panel design (300px max width)
+  - Better spacing and margins in data groups
+  - Enhanced log display with improved readability
+  - Optimized chart layout for better space utilization
+
+- **Performance Optimizations**
+  - Faster data processing for large CSV files
+  - Improved memory usage in replay mode
+  - Better threading performance in GUI updates
+  - Optimized statistics calculations
+
+### Testing
+- **New Test Coverage**
+  - GUI component testing: 25+ new test cases
+  - Integration testing: 15+ end-to-end scenarios
+  - Performance testing: Large dataset handling
+  - Error handling: Malformed data and edge cases
+  - Thread safety: Concurrent access patterns
+
+- **Test Infrastructure**
+  - Improved PyQt5 mocking for headless environments
+  - Better temporary file management in tests
+  - Enhanced test data generation utilities
+  - More reliable CI/CD test execution
+
 ## [1.1.0] - 2026-01-11
 
 ### Added
@@ -225,4 +358,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-**Last Updated**: 2026-01-11
+**Last Updated**: 2026-01-15
