@@ -69,7 +69,11 @@ def parse_csv_line(line: str) -> Optional[TelemetryData]:
     """
     Parse a CSV line from the Arduino into a TelemetryData object.
     
-    Expected format: time_ms;speed_kmh;rpm;throttle;battery_temp;g_force_lat;g_force_long;g_force_vert;acceleration_x;acceleration_y;acceleration_z;gps_latitude;gps_longitude;gps_altitude;tire_temp_fl;tire_temp_fr;tire_temp_rl;tire_temp_rr
+    Supports both legacy format (5 fields) and enhanced format (18 fields).
+    
+    Legacy format: time_ms;speed_kmh;rpm;throttle;battery_temp
+    Enhanced format: time_ms;speed_kmh;rpm;throttle;battery_temp;g_force_lat;g_force_long;g_force_vert;acceleration_x;acceleration_y;acceleration_z;gps_latitude;gps_longitude;gps_altitude;tire_temp_fl;tire_temp_fr;tire_temp_rl;tire_temp_rr
+    
     Example: 123456;45.2;8120;0.78;62.3;0.5;0.3;1.0;2.1;0.5;9.8;48.8566;2.3522;150;75.2;74.8;73.5;74.1
     
     :param line: Raw CSV line from Arduino/file
@@ -86,31 +90,54 @@ def parse_csv_line(line: str) -> Optional[TelemetryData]:
         # Split by semicolon
         values = line.split(";")
         
-        # Validate number of fields (now 18 fields)
-        if len(values) != 18:
-            raise ValueError(f"Expected 18 fields, got {len(values)}")
-        
-        # Parse and convert types
-        data = TelemetryData(
-            time_ms=int(values[0]),
-            speed=float(values[1]),
-            rpm=int(values[2]),
-            throttle=float(values[3]),
-            battery_temp=float(values[4]),
-            g_force_lat=float(values[5]),
-            g_force_long=float(values[6]),
-            g_force_vert=float(values[7]),
-            acceleration_x=float(values[8]),
-            acceleration_y=float(values[9]),
-            acceleration_z=float(values[10]),
-            gps_latitude=float(values[11]),
-            gps_longitude=float(values[12]),
-            gps_altitude=float(values[13]),
-            tire_temp_fl=float(values[14]),
-            tire_temp_fr=float(values[15]),
-            tire_temp_rl=float(values[16]),
-            tire_temp_rr=float(values[17])
-        )
+        # Handle both 5-field and 18-field formats
+        if len(values) == 5:
+            # Legacy format - parse first 5 fields, set others to defaults
+            data = TelemetryData(
+                time_ms=int(values[0]),
+                speed=float(values[1]),
+                rpm=int(values[2]),
+                throttle=float(values[3]),
+                battery_temp=float(values[4]),
+                g_force_lat=0.0,  # Default values
+                g_force_long=0.0,
+                g_force_vert=1.0,
+                acceleration_x=0.0,
+                acceleration_y=0.0,
+                acceleration_z=0.0,
+                gps_latitude=0.0,
+                gps_longitude=0.0,
+                gps_altitude=0.0,
+                tire_temp_fl=0.0,
+                tire_temp_fr=0.0,
+                tire_temp_rl=0.0,
+                tire_temp_rr=0.0
+            )
+        elif len(values) == 18:
+            # Enhanced format - parse all fields
+            data = TelemetryData(
+                time_ms=int(values[0]),
+                speed=float(values[1]),
+                rpm=int(values[2]),
+                throttle=float(values[3]),
+                battery_temp=float(values[4]),
+                g_force_lat=float(values[5]),
+                g_force_long=float(values[6]),
+                g_force_vert=float(values[7]),
+                acceleration_x=float(values[8]),
+                acceleration_y=float(values[9]),
+                acceleration_z=float(values[10]),
+                gps_latitude=float(values[11]),
+                gps_longitude=float(values[12]),
+                gps_altitude=float(values[13]),
+                tire_temp_fl=float(values[14]),
+                tire_temp_fr=float(values[15]),
+                tire_temp_rl=float(values[16]),
+                tire_temp_rr=float(values[17])
+            )
+        else:
+            print(f"! Parse error: Expected 5 or 18 fields, got {len(values)} | Line: {line}")
+            return None
         
         return data
         
