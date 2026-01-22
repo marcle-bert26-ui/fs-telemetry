@@ -18,6 +18,9 @@ class TemporalAnalysisWidget(QWidget):
     Widget for temporal analysis combining track map and spider charts.
     """
     
+    # Signal pour synchroniser les données avec les graphiques de droite
+    data_sync_signal = pyqtSignal('PyQt_PyObject')
+    
     def __init__(self):
         """Initialize temporal analysis widget."""
         super().__init__()
@@ -38,22 +41,15 @@ class TemporalAnalysisWidget(QWidget):
         # Create tab widget for different analysis views
         tab_widget = QTabWidget()
         
-        # Combined analysis tab
-        combined_tab = QWidget()
-        combined_layout = QVBoxLayout(combined_tab)
-        
-        # Create widgets
+        # Create widgets (shared between tabs)
         self.track_map = TrackMapWidget()
         self.spider_chart = GForcesSpiderWidget()
         
         # Connect position change signal
         self.track_map.position_changed.connect(self.spider_chart.update_position)
         
-        # Add widgets to combined layout
-        combined_layout.addWidget(self.track_map)
-        combined_layout.addWidget(self.spider_chart)
-        
-        tab_widget.addTab(combined_tab, "🗺️ Combined Analysis")
+        # Connect spider chart data changes to sync signal
+        self.spider_chart.current_data_changed.connect(self.data_sync_signal.emit)
         
         # Track map only tab
         track_tab = QWidget()

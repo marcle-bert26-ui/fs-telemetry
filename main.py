@@ -125,10 +125,10 @@ def main():
     """
     if config.SIMULATION_MODE:
         # In simulation mode, ask which CSV file to replay
-        csv_file = input("Enter CSV file path to replay (or press Enter for default): ").strip()
+        csv_file = input(f"Enter CSV file path to replay (or press Enter for default: {config.DEFAULT_CSV_FILE}): ").strip()
         if not csv_file:
-            # Default to sample test data
-            csv_file = "tests/sample_data.csv"
+            # Default to the configured file
+            csv_file = config.DEFAULT_CSV_FILE
         main_replay(csv_file)
     else:
         # Live mode - read from Arduino

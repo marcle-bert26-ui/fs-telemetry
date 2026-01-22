@@ -67,7 +67,20 @@ class CSVLogger:
                 data.speed,
                 data.rpm,
                 data.throttle,
-                data.battery_temp
+                data.battery_temp,
+                data.g_force_lat,
+                data.g_force_long,
+                data.g_force_vert,
+                data.acceleration_x,
+                data.acceleration_y,
+                data.acceleration_z,
+                data.gps_latitude,
+                data.gps_longitude,
+                data.gps_altitude,
+                data.tire_temp_fl,
+                data.tire_temp_fr,
+                data.tire_temp_rl,
+                data.tire_temp_rr
             ])
             self.file.flush()
         except Exception as e:

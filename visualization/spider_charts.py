@@ -6,9 +6,8 @@ Displays G-forces and other multi-dimensional data in radar/spider charts.
 import numpy as np
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGroupBox, 
                              QLabel, QGridLayout, QScrollArea)
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont, QPainter, QPen, QBrush, QColor, QPolygonF
-from PyQt5.QtCore import QPointF
+from PyQt5.QtGui import QPainter, QPen, QBrush, QColor, QPolygonF, QFont
+from PyQt5.QtCore import Qt, pyqtSignal, QPointF, QRectF
 from collections import deque
 from parsing.csv_parser import TelemetryData
 
@@ -48,15 +47,16 @@ class SpiderChartWidget(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         
-        # Get drawing area
-        rect = self.rect().adjusted(40, 60, -40, -40)
+        # Get drawing area with more padding
+        rect = self.rect().adjusted(50, 80, -50, -50)  # Augmenté de 40,60,-40,-40 à 50,80,-50,-50
         center = rect.center()
         radius = min(rect.width(), rect.height()) // 2
         
-        # Draw title
+        # Draw title with more space
         painter.setFont(QFont("Arial", 12, QFont.Bold))
-        painter.setPen(QPen('#1e3a8a'))
-        painter.drawText(self.rect(), Qt.AlignTop | Qt.AlignHCenter, self.title)
+        painter.setPen(QPen(QColor('#1e3a8a')))
+        title_rect = self.rect().adjusted(0, 10, 0, 0)  # Ajouter de l'espace en haut
+        painter.drawText(title_rect, Qt.AlignTop | Qt.AlignHCenter, self.title)
         
         # Calculate angles for each axis
         num_axes = len(self.labels)
@@ -66,28 +66,28 @@ class SpiderChartWidget(QWidget):
             angles.append(angle)
         
         # Draw grid circles
-        painter.setPen(QPen('#d1d5db', 1))
+        painter.setPen(QPen(QColor('#d1d5db'), 1))
         num_circles = 5
         for i in range(1, num_circles + 1):
             circle_radius = radius * i / num_circles
             painter.drawEllipse(center, circle_radius, circle_radius)
         
         # Draw axes
-        painter.setPen(QPen('#9ca3af', 1))
+        painter.setPen(QPen(QColor('#9ca3af'), 1))
         for angle in angles:
             end_x = center.x() + radius * np.cos(angle)
             end_y = center.y() + radius * np.sin(angle)
             painter.drawLine(center, QPointF(end_x, end_y))
         
-        # Draw labels
+        # Draw labels with better positioning
         painter.setFont(QFont("Arial", 9))
-        painter.setPen(QPen('#374151'))
+        painter.setPen(QPen(QColor('#374151')))
         for i, (angle, label) in enumerate(zip(angles, self.labels)):
-            label_radius = radius + 20
+            label_radius = radius + 30  # Augmenté de 20 à 30 pour plus d'espace
             label_x = center.x() + label_radius * np.cos(angle)
             label_y = center.y() + label_radius * np.sin(angle)
             
-            # Adjust text alignment based on position
+            # Adjust text alignment based on position with more space
             if abs(label_x - center.x()) < 10:
                 alignment = Qt.AlignHCenter | Qt.AlignVCenter
             elif label_x < center.x():
@@ -95,7 +95,8 @@ class SpiderChartWidget(QWidget):
             else:
                 alignment = Qt.AlignLeft | Qt.AlignVCenter
             
-            painter.drawText(QRectF(label_x - 30, label_y - 10, 60, 20), alignment, label)
+            # Use larger rect for text with more padding
+            painter.drawText(QRectF(label_x - 40, label_y - 15, 80, 30), alignment, label)
         
         # Draw data
         for data_point in self.data:
@@ -103,7 +104,7 @@ class SpiderChartWidget(QWidget):
         
         # Draw scale values
         painter.setFont(QFont("Arial", 8))
-        painter.setPen(QPen('#6b7280'))
+        painter.setPen(QPen(QColor('#6b7280')))
         for i in range(1, num_circles + 1):
             value = self.max_value * i / num_circles
             painter.drawText(QRectF(center.x() - 20, center.y() - radius * i / num_circles - 5, 40, 10), 
@@ -143,6 +144,9 @@ class GForcesSpiderWidget(QWidget):
     Widget displaying G-forces in spider chart format.
     """
     
+    # Signal pour émettre les données actuelles du spider chart
+    current_data_changed = pyqtSignal('PyQt_PyObject')
+    
     def __init__(self, max_points=100):
         """Initialize G-forces spider widget."""
         super().__init__()
@@ -170,11 +174,7 @@ class GForcesSpiderWidget(QWidget):
         title.setStyleSheet("color: #1e3a8a; margin: 10px;")
         layout.addWidget(title)
         
-        # Create scroll area for multiple charts
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        
+        # Create charts widget directly (no scroll area)
         charts_widget = QWidget()
         charts_layout = QVBoxLayout(charts_widget)
         
@@ -247,8 +247,8 @@ class GForcesSpiderWidget(QWidget):
         stats_group.setLayout(stats_layout)
         charts_layout.addWidget(stats_group)
         
-        scroll_area.setWidget(charts_widget)
-        layout.addWidget(scroll_area)
+        # Add charts widget directly to layout (no scroll area)
+        layout.addWidget(charts_widget)
     
     def update_data(self, data: TelemetryData):
         """Update spider chart with new telemetry data."""
@@ -277,6 +277,9 @@ class GForcesSpiderWidget(QWidget):
             f"Vertical: {data.g_force_vert:.2f}g"
         )
         
+        # Émettre le signal avec les données actuelles pour synchroniser avec les graphiques de droite
+        self.current_data_changed.emit(data)
+        
         # Update statistics
         self.update_statistics()
     
@@ -296,6 +299,9 @@ class GForcesSpiderWidget(QWidget):
                 f"Longitudinal: {data.g_force_long:.2f}g | "
                 f"Vertical: {data.g_force_vert:.2f}g"
             )
+            
+            # Émettre le signal avec les données actuelles pour synchroniser avec les graphiques de droite
+            self.current_data_changed.emit(data)
     
     def update_statistics(self):
         """Update G-forces statistics."""

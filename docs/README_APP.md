@@ -13,20 +13,24 @@ A comprehensive Python application for acquiring, logging, and analyzing telemet
 - Live telemetry visualization
 - Automatic CSV logging
 - Real-time statistics
+- Enhanced UI with styled components
 
 🔄 **REPLAY MODE** - Offline analysis
 - Load and replay recorded CSV files
 - Session statistics and analysis
 - Historical data visualization
+- Interactive time-based exploration
 - Export and sharing capabilities
 
 📊 **Advanced Features**
 - Multi-threaded architecture for smooth UI
 - Comprehensive error handling
 - **All 35+ tests passing** ✅
-- Professional PyQt5 GUI
+- Professional PyQt5 GUI with enhanced styling
 - Detailed logging and reporting
 - **Full CI/CD with GitHub Actions** (Python 3.8-3.12, Windows/Linux/macOS)
+- Real-time data visualization with charts
+- Enhanced user experience with color-coded displays
 
 ## System Requirements
 
@@ -103,9 +107,11 @@ fs-telemetry/
 ├── log_handlers/         # Data logging
 │   └── csv_logger.py      # CSV file writing
 ├── gui/                  # GUI components
-│   ├── main_window.py     # Main window
-│   ├── live_mode_widget.py
-│   └── replay_mode_widget.py
+│   ├── main_window.py     # Main window with tabs
+│   ├── live_mode_widget.py # Live mode interface
+│   ├── replay_mode_widget.py # Replay mode interface
+│   ├── file_selector.py   # File selection widget
+│   └── temporal_analysis_widget.py # Time-based analysis
 ├── visualization/        # Console display
 │   └── console_display.py
 ├── tests/                # Unit tests

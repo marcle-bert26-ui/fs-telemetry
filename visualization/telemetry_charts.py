@@ -8,6 +8,16 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLab
 from PyQt5.QtCore import QTimer, Qt
 from PyQt5.QtGui import QFont
 import pyqtgraph as pg
+# Configuration safe pour éviter les erreurs de version PyQt5
+try:
+    pg.setConfigOptions({
+        'useOpenGL': False,
+        'enableExperimental': False,
+        'leftButtonPan': False
+    })
+except:
+    # Fallback si setConfigOptions n'est pas disponible
+    pass
 from collections import deque
 from parsing.csv_parser import TelemetryData
 
@@ -54,6 +64,7 @@ class TelemetryCharts(QWidget):
         
         layout = QVBoxLayout(self)
         layout.setSpacing(10)
+        layout.setContentsMargins(10, 10, 10, 10)  # Ajouter des marges
         
         # Set minimum size for the entire charts widget
         self.setMinimumSize(800, 600)
@@ -62,11 +73,11 @@ class TelemetryCharts(QWidget):
         size_policy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setSizePolicy(size_policy)
         
-        # Title
+        # Title avec plus d'espace et meilleure position
         title = QLabel("📊 Real-time Telemetry Charts")
         title.setFont(QFont("Arial", 16, QFont.Bold))
         title.setAlignment(Qt.AlignCenter)
-        title.setStyleSheet("color: #1e3a8a; margin: 10px;")
+        title.setStyleSheet("color: #1e3a8a; margin: 15px 10px 5px 10px; padding: 10px; background: white; border-radius: 8px; border: 1px solid #e5e7eb;")
         layout.addWidget(title)
         
         # Create scroll area for charts
@@ -78,28 +89,29 @@ class TelemetryCharts(QWidget):
         
         # Create charts container
         charts_container = QWidget()
-        chart_layout = QGridLayout()
+        chart_layout = QVBoxLayout()  # Changé de QGridLayout à QVBoxLayout
         chart_layout.setSpacing(15)
+        chart_layout.setContentsMargins(10, 10, 10, 10)  # Ajouter des marges intérieures
         
         # Speed and RPM chart
         self.speed_rpm_plot = self.create_plot("Speed & RPM", "Time (s)", ["Speed (km/h)", "RPM/100"])
-        chart_layout.addWidget(self.speed_rpm_plot, 0, 0)
+        chart_layout.addWidget(self.speed_rpm_plot)
         
         # Throttle and Battery Temperature chart
         self.throttle_temp_plot = self.create_plot("Throttle & Battery Temp", "Time (s)", ["Throttle (%)", "Temp (°C)"])
-        chart_layout.addWidget(self.throttle_temp_plot, 0, 1)
+        chart_layout.addWidget(self.throttle_temp_plot)
         
         # G-Forces chart
         self.g_force_plot = self.create_plot("G-Forces", "Time (s)", ["Lateral (g)", "Longitudinal (g)", "Vertical (g)"])
-        chart_layout.addWidget(self.g_force_plot, 1, 0)
+        chart_layout.addWidget(self.g_force_plot)
         
         # Acceleration chart
         self.accel_plot = self.create_plot("Acceleration", "Time (s)", ["X (m/s²)", "Y (m/s²)", "Z (m/s²)"])
-        chart_layout.addWidget(self.accel_plot, 1, 1)
+        chart_layout.addWidget(self.accel_plot)
         
         # Tire Temperatures chart
         self.tire_temp_plot = self.create_plot("Tire Temperatures", "Time (s)", ["FL (°C)", "FR (°C)", "RL (°C)", "RR (°C)"])
-        chart_layout.addWidget(self.tire_temp_plot, 2, 0, 1, 2)  # Span 2 columns
+        chart_layout.addWidget(self.tire_temp_plot)
         
         charts_container.setLayout(chart_layout)
         scroll_area.setWidget(charts_container)
@@ -108,20 +120,26 @@ class TelemetryCharts(QWidget):
     def create_plot(self, title, x_label, y_labels):
         """Create a plot widget with specified configuration."""
         plot_widget = pg.PlotWidget(title=title)
-        plot_widget.setLabel('left', y_labels[0])
-        plot_widget.setLabel('bottom', x_label)
-        plot_widget.showGrid(x=True, y=True, alpha=0.3)
-        plot_widget.setBackground('#f8f9fa')
         
-        # Set minimum size for better visibility
-        plot_widget.setMinimumSize(500, 300)
+        # Configuration améliorée pour une meilleure apparence
+        plot_widget.setLabel('left', y_labels[0], units='', **{'font-size': '11pt', 'color': '#374151'})
+        plot_widget.setLabel('bottom', x_label, units='', **{'font-size': '11pt', 'color': '#374151'})
+        plot_widget.showGrid(x=True, y=True, alpha=0.2)
+        plot_widget.setBackground('#ffffff')
         
-        # Add legend
-        plot_widget.addLegend()
+        # Configuration des bordures et marges
+        plot_widget.getViewBox().setContentsMargins(10, 10, 10, 10)
+        
+        # Set minimum size pour une meilleure visibilité
+        plot_widget.setMinimumSize(400, 300)
+        
+        # Améliorer la légende
+        legend = plot_widget.addLegend()
+        legend.setPos(0.98, 0.98)  # Position en haut à droite
         
         # Create curves for each y-axis label
         curves = []
-        colors = ['#1e3a8a', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899']
+        colors = ['#2563eb', '#dc2626', '#16a34a', '#ca8a04', '#7c3aed', '#db2777']
         legend_names = {
             "Speed (km/h)": "Speed",
             "RPM/100": "RPM/100", 
@@ -139,18 +157,32 @@ class TelemetryCharts(QWidget):
             "RR (°C)": "Rear Right"
         }
         
+        current_points = []  # Store current points separately
+        
         for i, y_label in enumerate(y_labels):
             color = colors[i % len(colors)]
             legend_name = legend_names.get(y_label, y_label)
             try:
-                curve = plot_widget.plot(pen=pg.mkPen(color=color, width=2), name=legend_name)
+                curve = plot_widget.plot(pen=pg.mkPen(color=color, width=2.5), name=legend_name)
             except Exception as e:
                 print(f"! Error creating curve: {e}")
-                curve = plot_widget.plot(pen={'color': color, 'width': 2}, name=legend_name)
+                curve = plot_widget.plot(pen={'color': color, 'width': 2.5}, name=legend_name)
             curves.append(curve)
+            
+            # Add red point for each curve
+            current_point = plot_widget.plot(
+                pen=None, 
+                symbol='o', 
+                symbolBrush='r', 
+                symbolSize=10, 
+                symbolPen='r',
+                name=f'Current {legend_name}'
+            )
+            current_points.append(current_point)
         
-        # Store curves with plot for later updates
+        # Store curves and current points with plot for later updates
         plot_widget.curves = curves
+        plot_widget.current_points = current_points  # Store all current points
         plot_widget.y_labels = y_labels
         
         return plot_widget
@@ -192,51 +224,81 @@ class TelemetryCharts(QWidget):
             return
         
         time_array = np.array(self.time_data)
+        current_time = time_array[-1]  # Get the most recent time
         
         try:
             # Update Speed & RPM plot
             if len(self.speed_data) > 0:
                 self.speed_rpm_plot.curves[0].setData(time_array, np.array(self.speed_data))
+                # Update red point for speed
+                self.speed_rpm_plot.current_points[0].setData([current_time], [self.speed_data[-1]])
             if len(self.rpm_data) > 0:
                 self.speed_rpm_plot.curves[1].setData(time_array, np.array(self.rpm_data))
+                # Update red point for RPM
+                self.speed_rpm_plot.current_points[1].setData([current_time], [self.rpm_data[-1]])
             
-            # Update Throttle & Temperature plot
+            # Update Throttle & Battery Temperature plot
             if len(self.throttle_data) > 0:
                 self.throttle_temp_plot.curves[0].setData(time_array, np.array(self.throttle_data))
+                # Update red point for throttle
+                self.throttle_temp_plot.current_points[0].setData([current_time], [self.throttle_data[-1]])
             if len(self.battery_temp_data) > 0:
                 self.throttle_temp_plot.curves[1].setData(time_array, np.array(self.battery_temp_data))
+                # Update red point for temperature
+                self.throttle_temp_plot.current_points[1].setData([current_time], [self.battery_temp_data[-1]])
             
             # Update G-Forces plot
             if len(self.g_force_lat_data) > 0:
                 self.g_force_plot.curves[0].setData(time_array, np.array(self.g_force_lat_data))
+                # Update red point for lateral G
+                self.g_force_plot.current_points[0].setData([current_time], [self.g_force_lat_data[-1]])
             if len(self.g_force_long_data) > 0:
                 self.g_force_plot.curves[1].setData(time_array, np.array(self.g_force_long_data))
+                # Update red point for longitudinal G
+                self.g_force_plot.current_points[1].setData([current_time], [self.g_force_long_data[-1]])
             if len(self.g_force_vert_data) > 0:
                 self.g_force_plot.curves[2].setData(time_array, np.array(self.g_force_vert_data))
+                # Update red point for vertical G
+                self.g_force_plot.current_points[2].setData([current_time], [self.g_force_vert_data[-1]])
             
             # Update Acceleration plot
             if len(self.accel_x_data) > 0:
                 self.accel_plot.curves[0].setData(time_array, np.array(self.accel_x_data))
+                # Update red point for accel X
+                self.accel_plot.current_points[0].setData([current_time], [self.accel_x_data[-1]])
             if len(self.accel_y_data) > 0:
                 self.accel_plot.curves[1].setData(time_array, np.array(self.accel_y_data))
+                # Update red point for accel Y
+                self.accel_plot.current_points[1].setData([current_time], [self.accel_y_data[-1]])
             if len(self.accel_z_data) > 0:
                 self.accel_plot.curves[2].setData(time_array, np.array(self.accel_z_data))
+                # Update red point for accel Z
+                self.accel_plot.current_points[2].setData([current_time], [self.accel_z_data[-1]])
             
             # Update Tire Temperatures plot
             if len(self.tire_fl_data) > 0:
                 self.tire_temp_plot.curves[0].setData(time_array, np.array(self.tire_fl_data))
+                # Update red point for front left tire
+                self.tire_temp_plot.current_points[0].setData([current_time], [self.tire_fl_data[-1]])
             if len(self.tire_fr_data) > 0:
                 self.tire_temp_plot.curves[1].setData(time_array, np.array(self.tire_fr_data))
+                # Update red point for front right tire
+                self.tire_temp_plot.current_points[1].setData([current_time], [self.tire_fr_data[-1]])
             if len(self.tire_rl_data) > 0:
                 self.tire_temp_plot.curves[2].setData(time_array, np.array(self.tire_rl_data))
+                # Update red point for rear left tire
+                self.tire_temp_plot.current_points[2].setData([current_time], [self.tire_rl_data[-1]])
             if len(self.tire_rr_data) > 0:
                 self.tire_temp_plot.curves[3].setData(time_array, np.array(self.tire_rr_data))
+                # Update red point for rear right tire
+                self.tire_temp_plot.current_points[3].setData([current_time], [self.tire_rr_data[-1]])
                 
         except Exception as e:
             print(f"! Error updating plots: {e}")
     
     def clear_data(self):
-        """Clear all chart data."""
+        """Clear all chart data and reset points to origin."""
+        # Clear all data arrays
         self.time_data.clear()
         self.speed_data.clear()
         self.rpm_data.clear()
@@ -253,8 +315,40 @@ class TelemetryCharts(QWidget):
         self.tire_rl_data.clear()
         self.tire_rr_data.clear()
         
-        # Clear plots
-        for plot in [self.speed_rpm_plot, self.throttle_temp_plot, self.g_force_plot, 
-                     self.accel_plot, self.tire_temp_plot]:
-            for curve in plot.curves:
-                curve.clear()
+        # Clear and reset all plots
+        plots_to_clear = [
+            (self.speed_rpm_plot, "Speed & RPM"),
+            (self.throttle_temp_plot, "Throttle & Battery Temp"), 
+            (self.g_force_plot, "G-Forces"),
+            (self.accel_plot, "Acceleration"),
+            (self.tire_temp_plot, "Tire Temperatures")
+        ]
+        
+        for plot, plot_name in plots_to_clear:
+            if plot is not None:
+                # Clear all curves
+                for curve in plot.curves:
+                    curve.clear()
+                
+                # Reset red points to origin (0,0)
+                if hasattr(plot, 'current_points'):
+                    for current_point in plot.current_points:
+                        current_point.setData([0], [0])
+                
+                # Reset plot view to show origin with appropriate ranges
+                view_box = plot.getViewBox()
+                if "Speed" in plot_name:
+                    view_box.setRange(xRange=[-1, 5], yRange=[-10, 200], padding=0)
+                elif "Throttle" in plot_name:
+                    view_box.setRange(xRange=[-1, 5], yRange=[-10, 110], padding=0)
+                elif "G-Forces" in plot_name:
+                    view_box.setRange(xRange=[-1, 5], yRange=[-3, 3], padding=0)
+                elif "Acceleration" in plot_name:
+                    view_box.setRange(xRange=[-1, 5], yRange=[-10, 10], padding=0)
+                elif "Tire" in plot_name:
+                    view_box.setRange(xRange=[-1, 5], yRange=[-10, 100], padding=0)
+                else:
+                    view_box.setRange(xRange=[-1, 5], yRange=[-10, 10], padding=0)
+                
+                # Force plot update
+                plot.update()

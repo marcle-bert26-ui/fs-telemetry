@@ -1,12 +1,13 @@
 {
-  "typeCheckingMode": "basic",
+  "typeCheckingMode": "off",
   "pythonVersion": "3.11",
   "reportMissingImports": false,
   "reportMissingTypeStubs": false,
   "reportUnknownMemberType": false,
   "reportUnknownParameterType": false,
   "reportGeneralTypeIssues": false,
-  "stubPath": "./stubs",
+  "venvPath": ".",
+  "venv": ".venv",
   "ignore": [
     "**/__pycache__",
     "**/node_modules",

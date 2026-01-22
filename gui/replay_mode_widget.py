@@ -3,7 +3,7 @@ Replay Mode Widget - Interface for CSV file replay and analysis.
 """
 
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-                             QLineEdit, QGridLayout, QGroupBox, QTextEdit, QFileDialog, QTabWidget, QScrollArea)
+                             QLineEdit, QGridLayout, QGroupBox, QTextEdit, QFileDialog, QScrollArea)
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from PyQt5.QtGui import QFont
 
@@ -84,6 +84,9 @@ class ReplayModeWidget(QWidget):
         self.replay_thread = None
         self.current_file = None
         
+        # Connect temporal analysis sync signal to charts
+        self.temporal_analysis.data_sync_signal.connect(self.charts.update_data)
+        
         self.init_ui()
     
     def init_ui(self):
@@ -124,7 +127,7 @@ class ReplayModeWidget(QWidget):
         """)
         button_layout.addWidget(self.play_btn)
         
-        self.stop_btn = QPushButton("⏹ Stop Replay")
+        self.stop_btn = QPushButton(" Stop Replay")
         self.stop_btn.clicked.connect(self.stop_replay)
         self.stop_btn.setEnabled(False)
         self.stop_btn.setStyleSheet("""
@@ -147,86 +150,63 @@ class ReplayModeWidget(QWidget):
         
         # Create horizontal layout for parallel views
         main_layout = QHBoxLayout()
-        main_layout.setSpacing(5)  # Réduit espacement
+        main_layout.setSpacing(5)
         
-        # Left panel - Current Data (plus petit)
+        # Left panel - Current Data
         left_panel = QWidget()
-        left_panel.setMaximumWidth(350)  # Limite largeur du panneau gauche
-        left_layout = QVBoxLayout(left_panel)
-        left_layout.setSpacing(8)  # Réduit espacement
+        left_panel.setMaximumWidth(300)
         
-        # Current data group (plus compact)
-        data_group = QGroupBox("📊 Current Data")
-        data_group.setStyleSheet("""
-            QGroupBox {
-                font-size: 12px;
-                font-weight: bold;
-                border: 2px solid #1e3a8a;
-                border-radius: 6px;
-                margin-top: 5px;
-                padding-top: 8px;
-            }
-            QGroupBox::title {
-                subcontrol-origin: margin;
-                left: 8px;
-                padding: 0 8px 0 8px;
-                color: #1e3a8a;
-            }
-        """)
+        # Create scroll area for left panel
+        left_scroll = QScrollArea()
+        left_scroll.setWidgetResizable(True)
+        left_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        left_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        
+        # Content widget for scroll area
+        left_content = QWidget()
+        left_layout = QVBoxLayout(left_content)
+        left_layout.setSpacing(8)
+        
+        # Current data group
+        data_group = QGroupBox(" Current Data")
         data_layout = QGridLayout()
-        data_layout.setSpacing(8)  # Plus compact
+        data_layout.setSpacing(8)
         
-        # Speed (plus petit)
+        # Speed
         data_layout.addWidget(QLabel("Speed:"), 0, 0)
         self.speed_label = QLabel("-- km/h")
         self.speed_label.setFont(QFont("Arial", 14, QFont.Bold))
         self.speed_label.setStyleSheet("color: #1e3a8a; background: #f0f9ff; padding: 6px; border-radius: 4px; min-width: 100px;")
         data_layout.addWidget(self.speed_label, 0, 1)
         
-        # RPM (plus petit)
+        # RPM
         data_layout.addWidget(QLabel("RPM:"), 0, 2)
         self.rpm_label = QLabel("--")
         self.rpm_label.setFont(QFont("Arial", 14, QFont.Bold))
         self.rpm_label.setStyleSheet("color: #1e3a8a; background: #f0f9ff; padding: 6px; border-radius: 4px; min-width: 100px;")
         data_layout.addWidget(self.rpm_label, 0, 3)
         
-        # Throttle (plus petit)
+        # Throttle
         data_layout.addWidget(QLabel("Throttle:"), 1, 0)
         self.throttle_label = QLabel("--%")
         self.throttle_label.setFont(QFont("Arial", 14, QFont.Bold))
         self.throttle_label.setStyleSheet("color: #1e3a8a; background: #f0f9ff; padding: 6px; border-radius: 4px; min-width: 100px;")
         data_layout.addWidget(self.throttle_label, 1, 1)
         
-        # Temperature (plus petit)
+        # Temperature
         data_layout.addWidget(QLabel("Temp:"), 1, 2)
         self.temp_label = QLabel("--°C")
         self.temp_label.setFont(QFont("Arial", 14, QFont.Bold))
-        self.temp_label.setStyleSheet("color: #dc2626; background: #fef2f2; padding: 6px; border-radius: 4px; min-width: 100px;")  # Rouge pour température
+        self.temp_label.setStyleSheet("color: #dc2626; background: #fef2f2; padding: 6px; border-radius: 4px; min-width: 100px;")
         data_layout.addWidget(self.temp_label, 1, 3)
         
         data_group.setLayout(data_layout)
         left_layout.addWidget(data_group)
         
-        # Statistics group (plus compact)
-        stats_group = QGroupBox("📈 Statistics")
-        stats_group.setStyleSheet("""
-            QGroupBox {
-                font-size: 12px;
-                font-weight: bold;
-                border: 2px solid #10b981;
-                border-radius: 6px;
-                margin-top: 5px;
-                padding-top: 8px;
-            }
-            QGroupBox::title {
-                subcontrol-origin: margin;
-                left: 8px;
-                padding: 0 8px 0 8px;
-                color: #10b981;
-            }
-        """)
+        # Statistics group
+        stats_group = QGroupBox(" Statistics")
         stats_layout = QGridLayout()
-        stats_layout.setSpacing(6)  # Plus compact
+        stats_layout.setSpacing(6)
         
         stats_layout.addWidget(QLabel("Max Speed:"), 0, 0)
         self.max_speed_label = QLabel("--")
@@ -261,56 +241,37 @@ class ReplayModeWidget(QWidget):
         stats_group.setLayout(stats_layout)
         left_layout.addWidget(stats_group)
         
-        # Log display (plus petit)
+        # Log display
         self.log_text = QTextEdit()
         self.log_text.setReadOnly(True)
-        self.log_text.setMaximumHeight(100)  # Encore plus petit
-        self.log_text.setFont(QFont("Arial", 8))  # Police encore plus petite
+        self.log_text.setMaximumHeight(150)
+        self.log_text.setFont(QFont("Arial", 8))
         left_layout.addWidget(QLabel("📝 Log :"))
         left_layout.addWidget(self.log_text)
         
-        left_layout.addStretch()
-        main_layout.addWidget(left_panel)  # Pas de ratio fixe, largeur limitée
+        # Add temporal analysis widget in scrollable area
+        temporal_group = QGroupBox("🕒 Temporal Analysis")
+        temporal_layout = QVBoxLayout()
+        temporal_layout.addWidget(self.temporal_analysis)
+        temporal_group.setLayout(temporal_layout)
+        left_layout.addWidget(temporal_group)
         
-        # Right panel - Charts (tout le reste)
+        left_content.setLayout(left_layout)
+        left_scroll.setWidget(left_content)
+        main_layout.addWidget(left_scroll)
+        
+        # Right panel - Charts
         right_panel = QWidget()
         right_layout = QVBoxLayout(right_panel)
-        right_layout.setSpacing(5)  # Réduit espacement
+        right_layout.setSpacing(10)
         
-        # Create tab widget for data views
-        tab_widget = QTabWidget()
-        tab_widget.setStyleSheet("""
-            QTabWidget::pane {
-                border: 1px solid #d1d5db;
-                background: #f9fafb;
-                border-radius: 5px;
-            }
-            QTabBar::tab {
-                background: #e5e7eb;
-                padding: 6px 12px;
-                margin-right: 2px;
-                border-top-left-radius: 4px;
-                border-top-right-radius: 4px;
-                font-weight: bold;
-            }
-            QTabBar::tab:selected {
-                background: #3b82f6;
-                color: white;
-            }
-        """)
+        # Add charts widget
+        right_layout.addWidget(self.charts)
         
-        # Charts tab (sans scroll area double)
-        tab_widget.addTab(self.charts, "📈 Charts")
-        
-        # Temporal analysis tab
-        tab_widget.addTab(self.temporal_analysis, "⏱️ Temporal Analysis")
-        
-        right_layout.addWidget(tab_widget)
-        main_layout.addWidget(right_panel)  # Prend tout le reste de l'espace
+        right_panel.setLayout(right_layout)
+        main_layout.addWidget(right_panel)
         
         layout.addLayout(main_layout)
-        
-        layout.addStretch()
     
     def on_file_selected(self, file_path):
         """Handle file selection from file selector."""
@@ -346,19 +307,46 @@ class ReplayModeWidget(QWidget):
         self.log_text.append("+ Replay started")
     
     def stop_replay(self):
-        """Stop CSV file replay."""
+        """Stop CSV file replay and reset all data."""
         if self.replay_thread:
             self.replay_thread.stop()
         
         self.play_btn.setEnabled(True)
         self.stop_btn.setEnabled(False)
         
-        self.log_text.append("- Replay stopped")
+        # Reset all data and displays
+        self.reset_all_data()
+        
+        self.log_text.append("- Replay stopped - All data reset")
+    
+    def reset_all_data(self):
+        """Reset all charts, statistics, and displays to initial state."""
+        # Clear charts data
+        self.charts.clear_data()
+        
+        # Clear temporal analysis data
+        self.temporal_analysis.clear_data()
+        
+        # Reset current data labels to 0
+        self.speed_label.setText("0.0 km/h")
+        self.rpm_label.setText("0")
+        self.throttle_label.setText("0%")
+        self.temp_label.setText("0.0°C")
+        
+        # Reset statistics labels to 0
+        self.max_speed_label.setText("0.0 km/h")
+        self.avg_speed_label.setText("0.0 km/h")
+        self.max_rpm_label.setText("0")
+        self.avg_temp_label.setText("0.0°C")
+        self.data_count_label.setText("0")
+        
+        # Reset telemetry manager
+        self.manager.reset_stats()
     
     def on_data_received(self, data):
         """Update GUI with received data."""
         # Handle both dict and TelemetryData objects
-        if hasattr(data, 'speed'):  # TelemetryData object
+        if hasattr(data, "speed"):  # TelemetryData object
             self.speed_label.setText(f"{data.speed:.1f} km/h")
             self.rpm_label.setText(f"{data.rpm:.0f}")
             self.throttle_label.setText(f"{data.throttle:.0f}%")
@@ -376,13 +364,14 @@ class ReplayModeWidget(QWidget):
             self.temp_label.setText(f"{data['battery_temp']:.1f}°C")
         
         # Update statistics
-        stats = self.replay_thread.manager.get_stats()
-        if stats:
-            self.max_speed_label.setText(f"{stats.get('max_speed', 0):.1f} km/h")
-            self.avg_speed_label.setText(f"{stats.get('avg_speed', 0):.1f} km/h")
-            self.max_rpm_label.setText(f"{stats.get('max_rpm', 0):.0f}")
-            self.avg_temp_label.setText(f"{stats.get('avg_temp', 0):.1f}°C")
-            self.data_count_label.setText(f"{stats.get('data_points', 0)}")
+        if self.replay_thread and hasattr(self.replay_thread, 'manager'):
+            stats = self.replay_thread.manager.get_stats()
+            if stats:
+                self.max_speed_label.setText(f"{stats.get('max_speed', 0):.1f} km/h")
+                self.avg_speed_label.setText(f"{stats.get('avg_speed', 0):.1f} km/h")
+                self.max_rpm_label.setText(f"{stats.get('max_rpm', 0):.0f}")
+                self.avg_temp_label.setText(f"{stats.get('avg_temp', 0):.1f}°C")
+                self.data_count_label.setText(f"{stats.get('data_points', 0)}")
     
     def on_error(self, error_msg):
         """Handle replay errors."""

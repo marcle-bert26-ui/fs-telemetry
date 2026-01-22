@@ -5,12 +5,12 @@ Provides interface for both LIVE and REPLAY modes.
 
 import sys
 from pathlib import Path
-from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QTabWidget, QLabel, QStatusBar, QAction
+from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QTabWidget, QLabel, QStatusBar, QAction)
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont, QIcon, QKeySequence
+from PyQt5.QtGui import QFont, QIcon, QPixmap, QKeySequence
 
-from .live_mode_widget import LiveModeWidget
-from .replay_mode_widget import ReplayModeWidget
+from gui.live_mode_widget import LiveModeWidget
+from gui.replay_mode_widget import ReplayModeWidget
 
 
 class MainWindow(QMainWindow):
@@ -38,25 +38,32 @@ class MainWindow(QMainWindow):
         
         # Create header
         header = QWidget()
-        header.setStyleSheet("background-color: #1e3a8a; padding: 10px;")
-        header_layout = QVBoxLayout(header)
+        header.setStyleSheet("background-color: #0f172a; padding: 10px;")  # Bleu plus foncé
+        header_layout = QHBoxLayout(header)  # Changé en QHBoxLayout
         
-        title = QLabel("🏎️ Formula Student Telemetry")
+        title = QLabel("🏎️ EIGSI Formula Student Telemetry")
         title_font = QFont()
         title_font.setPointSize(16)
         title_font.setBold(True)
         title.setFont(title_font)
         title.setStyleSheet("color: white;")
         
-        subtitle = QLabel("Real-time data acquisition and analysis from Formula Student vehicle")
+        subtitle = QLabel("Real-time data acquisition and analysis from EIGSI Formula Student vehicle")
         subtitle_font = QFont()
         subtitle_font.setPointSize(9)
         subtitle.setFont(subtitle_font)
         subtitle.setStyleSheet("color: #93c5fd;")
         
+        # Logo EIGSI (votre fichier PNG)
+        logo_label = QLabel()
+        logo_pixmap = QPixmap("C:/Users/marcl/Eigsi/Formula Team/fs-telemetry/visualization/logo_eisgsi_formula_team.png").scaled(120, 50, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        logo_label.setPixmap(logo_pixmap)
+        logo_label.setStyleSheet("padding: 5px;")
+        
         header_layout.addWidget(title)
+        header_layout.addStretch()  # Espace au milieu
         header_layout.addWidget(subtitle)
-        header_layout.setContentsMargins(15, 8, 15, 8)
+        header_layout.addWidget(logo_label)  # Logo à droite
         
         layout.addWidget(header)
         

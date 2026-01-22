@@ -99,6 +99,23 @@ class FileSelectorWidget(QWidget):
         # Quick access buttons
         quick_layout = QHBoxLayout()
         
+        self.circuit_loop_btn = QPushButton("🏁 Circuit Loop")
+        self.circuit_loop_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #dc2626;
+                color: white;
+                border: none;
+                padding: 6px 12px;
+                border-radius: 4px;
+                font-weight: bold;
+                font-size: 11px;
+            }
+            QPushButton:hover {
+                background-color: #b91c1c;
+            }
+        """)
+        self.circuit_loop_btn.clicked.connect(lambda: self.select_file("circuit_loop_data.csv"))
+        
         self.enhanced_btn = QPushButton("📊 Enhanced Data")
         self.enhanced_btn.setStyleSheet("""
             QPushButton {
@@ -133,6 +150,7 @@ class FileSelectorWidget(QWidget):
         """)
         self.full_circuit_btn.clicked.connect(lambda: self.select_file("full_circuit_data.csv"))
         
+        quick_layout.addWidget(self.circuit_loop_btn)
         quick_layout.addWidget(self.enhanced_btn)
         quick_layout.addWidget(self.full_circuit_btn)
         quick_layout.addStretch()
@@ -156,9 +174,16 @@ class FileSelectorWidget(QWidget):
                 for file in csv_files:
                     self.file_dropdown.addItem(file)
                     
-                # Auto-select first file if available
+                # Auto-select circuit_loop_data.csv if available, otherwise first file
                 if csv_files and not self.current_file:
-                    self.on_file_selected(csv_files[0])
+                    if "circuit_loop_data.csv" in csv_files:
+                        self.on_file_selected("circuit_loop_data.csv")
+                        # Set dropdown to show the selected file
+                        index = self.file_dropdown.findText("circuit_loop_data.csv")
+                        if index >= 0:
+                            self.file_dropdown.setCurrentIndex(index)
+                    else:
+                        self.on_file_selected(csv_files[0])
                     
         except Exception as e:
             print(f"! Error refreshing file list: {e}")

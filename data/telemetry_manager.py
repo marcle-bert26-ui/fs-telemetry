@@ -77,3 +77,7 @@ class TelemetryManager:
         self.history.clear()
         self.update_count = 0
         self.current = None
+    
+    def reset_stats(self):
+        """Reset all statistics and data to initial state."""
+        self.clear_history()
