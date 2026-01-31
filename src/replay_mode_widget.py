@@ -363,9 +363,9 @@ class ReplayModeWidget(QWidget):
             # Collect all data first
             all_data = []
             with open(file_path, 'r', encoding='utf-8') as file:
-                reader = csv.DictReader(file)
+                reader = csv.reader(file)
                 for row in reader:
-                    data = parse_csv_line(row)
+                    data = parse_csv_line(";".join(row))
                     if data:
                         all_data.append(data)
             
