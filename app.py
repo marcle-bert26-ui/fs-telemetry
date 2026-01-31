@@ -7,29 +7,14 @@ Usage:
 """
 
 import sys
-from gui.main_window import MainWindow
-from PyQt5.QtWidgets import QApplication
+import os
 
+# Add src directory to path
+src_path = os.path.join(os.path.dirname(__file__), 'src')
+if src_path not in sys.path:
+    sys.path.insert(0, src_path)
 
-def main():
-    """Main entry point for the application."""
-    app = QApplication(sys.argv)
-    
-    # Set application metadata
-    app.setApplicationName("Formula Student Telemetry")
-    app.setApplicationVersion("1.0.0")
-    
-    # Set application style
-    app.setStyle('Fusion')
-    
-    # Create and show main window
-    window = MainWindow()
-    
-    # Show in fullscreen mode
-    window.showFullScreen()
-    
-    sys.exit(app.exec_())
-
+from gui_app import main
 
 if __name__ == "__main__":
     main()

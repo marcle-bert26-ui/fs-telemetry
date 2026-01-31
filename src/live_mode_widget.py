@@ -6,14 +6,15 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushBut
                              QLineEdit, QSpinBox, QGridLayout, QGroupBox, QTextEdit, QTabWidget, QScrollArea)
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from PyQt5.QtGui import QFont, QColor
+import os
 
-from acquisition.serial_source import SerialSource
-from parsing.csv_parser import parse_csv_line
-from data.telemetry_manager import TelemetryManager
-from log_handlers.csv_logger import CSVLogger
-from visualization.telemetry_charts import TelemetryCharts
-from gui.temporal_analysis_widget import TemporalAnalysisWidget
-import config
+from serial_source import SerialSource
+from csv_parser import parse_csv_line
+from telemetry_manager import TelemetryManager
+from csv_logger import CSVLogger
+from telemetry_charts import TelemetryCharts
+from temporal_analysis_widget import TemporalAnalysisWidget
+import app_config as config
 
 
 class AcquisitionThread(QThread):
@@ -33,7 +34,7 @@ class AcquisitionThread(QThread):
         self.manager = TelemetryManager()
         self.logger = CSVLogger()
         self.charts = TelemetryCharts()
-        self.temporal_analysis = TemporalAnalysisWidget()
+        # self.temporal_analysis = TemporalAnalysisWidget()  # Pas d'interface dans un thread
         
     def run(self):
         """Execute the acquisition loop."""
@@ -44,7 +45,10 @@ class AcquisitionThread(QThread):
             
             # Initialize logger
             self.logger = CSVLogger()
-            self.status_changed.emit(f"Logging to {self.logger.filepath.name}")
+            if self.logger.filepath:
+                self.status_changed.emit(f"Logging to {os.path.basename(self.logger.filepath)}")
+            else:
+                self.status_changed.emit("Logger initialized")
             
             self.running = True
             
@@ -105,7 +109,34 @@ class LiveModeWidget(QWidget):
     
     def init_ui(self):
         """Initialize the user interface."""
-        layout = QVBoxLayout(self)
+        # Create main scroll area for global scrolling
+        main_scroll = QScrollArea()
+        main_scroll.setWidgetResizable(True)
+        main_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        main_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        main_scroll.setStyleSheet("""
+            QScrollArea {
+                background: #1a1a1a;
+                border: none;
+            }
+            QScrollBar:vertical {
+                background: #2d2d2d;
+                width: 12px;
+                border-radius: 6px;
+            }
+            QScrollBar::handle:vertical {
+                background: #4ecdc4;
+                border-radius: 6px;
+                min-height: 20px;
+            }
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                height: 0px;
+            }
+        """)
+        
+        # Create main widget to contain all content
+        main_widget = QWidget()
+        layout = QVBoxLayout(main_widget)
         layout.setSpacing(15)
         layout.setContentsMargins(20, 20, 20, 20)
         
@@ -119,8 +150,9 @@ class LiveModeWidget(QWidget):
         
         config_layout.addWidget(QLabel("Baudrate:"), 0, 2)
         self.baudrate_input = QSpinBox()
-        self.baudrate_input.setValue(config.SERIAL_BAUDRATE)
-        self.baudrate_input.setMaximum(1000000)
+        self.baudrate_input.setRange(300, 1000000)
+        self.baudrate_input.setValue(9600)  # Force to 9600
+        self.baudrate_input.setSingleStep(1)  # Step of 1
         config_layout.addWidget(self.baudrate_input, 0, 3)
         
         config_group.setLayout(config_layout)
@@ -171,9 +203,8 @@ class LiveModeWidget(QWidget):
         main_layout = QHBoxLayout()
         main_layout.setSpacing(5)  # Réduit espacement
         
-        # Left panel - Current Data (plus petit)
+        # Left panel - Current Data
         left_panel = QWidget()
-        left_panel.setMaximumWidth(400)  # Limite largeur du panneau gauche
         left_layout = QVBoxLayout(left_panel)
         left_layout.setSpacing(8)  # Réduit espacement
         
@@ -280,9 +311,9 @@ class LiveModeWidget(QWidget):
         left_layout.addWidget(self.log_text)
         
         left_layout.addStretch()
-        main_layout.addWidget(left_panel)  # Pas de ratio fixe, largeur limitée
+        main_layout.addWidget(left_panel)
         
-        # Right panel - Charts (tout le reste)
+        # Right panel - Charts
         right_panel = QWidget()
         right_layout = QVBoxLayout(right_panel)
         right_layout.setSpacing(5)  # Réduit espacement
@@ -309,27 +340,42 @@ class LiveModeWidget(QWidget):
             }
         """)
         
-        # Charts tab with scroll area
-        charts_scroll = QScrollArea()
-        charts_scroll.setWidgetResizable(True)
-        charts_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        charts_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        
-        # Set charts widget as scrollable content
-        charts_scroll.setWidget(self.charts)
-        tab_widget.addTab(charts_scroll, "📈 Charts")
+        # Charts tab (no individual scroll - using global scroll)
+        tab_widget.addTab(self.charts, "📈 Charts")
         
         right_layout.addWidget(tab_widget)
-        main_layout.addWidget(right_panel)  # Prend tout le reste de l'espace
+        main_layout.addWidget(right_panel)
+        
+        # Configurer les proportions 50/50
+        main_layout.setStretch(0, 1)  # Gauche : 1 partie
+        main_layout.setStretch(1, 1)  # Droite : 1 partie (50/50)
         
         layout.addLayout(main_layout)
         
-        layout.addStretch()
+        # Set the main widget as the scroll area's widget
+        main_scroll.setWidget(main_widget)
+        
+        # Add scroll area to the main layout
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.addWidget(main_scroll)
     
     def start_acquisition(self):
         """Start data acquisition from Arduino."""
         port = self.port_input.text()
         baudrate = self.baudrate_input.value()
+        
+        # Quick reset for new acquisition (lightweight)
+        self.charts.quick_clear()
+        
+        # Reset displays only
+        self.speed_label.setText("-- km/h")
+        self.rpm_label.setText("--")
+        self.throttle_label.setText("--%")
+        self.temp_label.setText("--°C")
+        self.max_speed_label.setText("--")
+        self.avg_speed_label.setText("--")
+        self.data_count_label.setText("0")
         
         self.acquisition_thread = AcquisitionThread(port, baudrate)
         self.acquisition_thread.data_received.connect(self.on_data_received)
@@ -349,6 +395,21 @@ class LiveModeWidget(QWidget):
         """Stop data acquisition."""
         if self.acquisition_thread:
             self.acquisition_thread.stop()
+        
+        # Reset all displays to 0
+        self.speed_label.setText("-- km/h")
+        self.rpm_label.setText("--")
+        self.throttle_label.setText("--%")
+        self.temp_label.setText("--°C")
+        self.max_speed_label.setText("--")
+        self.avg_speed_label.setText("--")
+        self.data_count_label.setText("0")
+        
+        # Reset charts to 0 - COMMENTED OUT to keep data for oscilloscope effect
+        # self.charts.clear_data()
+        
+        # Reset temporal analysis
+        self.temporal_analysis.clear_data()
         
         self.start_btn.setEnabled(True)
         self.stop_btn.setEnabled(False)

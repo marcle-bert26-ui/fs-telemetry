@@ -1,14 +1,13 @@
 """
-Visualization module - Display telemetry data in real-time or analysis mode.
+Console Display Module - Real-time telemetry display in terminal.
 """
 
-from parsing.csv_parser import TelemetryData
+from csv_parser import TelemetryData
 
 
 class ConsoleDisplay:
     """
     Simple console-based visualization of telemetry data.
-    Good for live monitoring and debugging.
     """
     
     def __init__(self, update_interval: int = 10):
@@ -35,7 +34,7 @@ class ConsoleDisplay:
     def print_header(self):
         """Print header information."""
         print("\n" + "=" * 80)
-        print("🏎️  Formula Student Telemetry System")
+        print("[RACING CAR] Formula Student Telemetry System")
         print("=" * 80 + "\n")
     
     def print_footer(self, stats: dict):

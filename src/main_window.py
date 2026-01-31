@@ -9,8 +9,8 @@ from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QTa
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont, QIcon, QPixmap, QKeySequence
 
-from gui.live_mode_widget import LiveModeWidget
-from gui.replay_mode_widget import ReplayModeWidget
+from live_mode_widget import LiveModeWidget
+from replay_mode_widget import ReplayModeWidget
 
 
 class MainWindow(QMainWindow):

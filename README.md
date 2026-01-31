@@ -10,19 +10,6 @@
 
 ---
 
-## Quick Access
-
-| Document | Purpose | Language |
-|----------|---------|----------|
-| [README_EN.md](docs/README_EN.md) | Main documentation | English |
-| [README_FR.md](docs/README_FR.md) | Documentation complète | Français |
-| [README_APP.md](docs/README_APP.md) | Feature details | English |
-| [INSTALL.md](INSTALL.md) | Installation guide | English |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Developer guide | English |
-| [CHANGELOG.md](docs/CHANGELOG.md) | Version history | English |
-
----
-
 ## 🚀 Get Started in 3 Steps
 
 ### 1. Clone & Setup
@@ -47,7 +34,174 @@ pip install -r requirements.txt
 ```bash
 py app.py          # GUI mode (LIVE/REPLAY) - Recommended
 py main.py         # CLI mode (console output)
-py tools/review.py # Project review and analysis
+```
+
+---
+
+## 📋 Features
+
+### 🎯 Core Telemetry
+- **Real-time data acquisition** from Arduino/serial sources
+- **CSV data replay** with full temporal analysis
+- **Multi-parameter monitoring**: Speed, RPM, Throttle, Temperature, G-forces
+- **GPS tracking** with circuit mapping
+- **Data logging** to CSV files
+
+### 📊 Visualization
+- **Interactive temporal graphs** with cursor synchronization
+- **Spider chart** for G-force analysis
+- **Track map** with real-time position tracking
+- **Real-time charts** with auto-zoom capabilities
+- **Current data display** with live updates
+
+### 🎮 User Interface
+- **Unified widget layout** with vertical organization
+- **Synchronized cursor** across all visualizations
+- **Auto-zoom controls** (2-minute window, full auto)
+- **Responsive design** with 50/50 layout split
+- **Dark theme** with modern styling
+
+---
+
+## 📁 Project Structure
+
+```
+fs-telemetry/
+├── src/                    # Source code
+│   ├── temporal_analysis_widget.py    # Main analysis widget
+│   ├── telemetry_charts.py            # Real-time charts
+│   ├── spider_charts.py               # G-force spider chart
+│   ├── replay_mode_widget.py          # Replay interface
+│   ├── live_mode_widget.py            # Live acquisition
+│   ├── csv_parser.py                  # CSV data parsing
+│   └── telemetry_manager.py           # Data management
+├── tests/                  # Test files & sample data
+│   ├── enhanced_sample_data.csv      # Sample telemetry data
+│   └── test_*.py                      # Unit tests
+├── tools/                  # Utility scripts
+│   ├── build_exe.py                   # Executable builder
+│   └── cleanup_logs.py                # Log management
+├── docs/                   # Documentation
+├── requirements.txt        # Dependencies
+└── app.py                  # Main application entry
+```
+
+---
+
+## 🎯 Key Components
+
+### Temporal Analysis Widget
+- **Vertical layout** with 4 main components:
+  1. **G-Forces Spider Chart** - Real-time force visualization
+  2. **Temporal Graphs** - Speed, RPM, G-forces over time
+  3. **Data Controls** - Cursor and range selection
+  4. **Track Map** - GPS position and trajectory
+
+### Synchronized Cursor System
+- **Time-based cursor** (0 to duration in seconds)
+- **Mathematical mapping** to data indices
+- **Real-time updates** across all visualizations
+- **Auto-follow mode** during data loading
+
+### Chart Integration
+- **Left panel**: Unified analysis widgets (50% width)
+- **Right panel**: Detailed telemetry charts (50% width)
+- **Auto-zoom**: Synchronized across track map and charts
+- **Cursor points**: Visual indicators on all graphs
+
+---
+
+## 📊 Data Format
+
+### Supported Parameters
+- **Time**: Timestamp in milliseconds
+- **Speed**: Vehicle speed in km/h
+- **RPM**: Engine revolutions per minute
+- **Throttle**: Accelerator pedal position (%)
+- **Temperature**: Battery temperature (°C)
+- **G-Forces**: Lateral, longitudinal, vertical (g)
+- **GPS**: Latitude, longitude for track mapping
+
+### CSV Structure
+```csv
+time_ms,speed,rpm,throttle,battery_temp,g_force_lat,g_force_long,g_force_vert,latitude,longitude
+1000,45.2,3500,65.5,23.4,0.12,0.05,0.98,45.1234,5.6789
+```
+
+---
+
+## 🔧 Configuration
+
+### Serial Port Settings
+- **Port**: Configurable COM port (Windows) or tty device (Linux)
+- **Baud Rate**: 115200 (default, adjustable)
+- **Data Format**: Arduino-compatible serial protocol
+
+### Display Settings
+- **Auto-zoom**: 2-minute window or full auto
+- **Update Rate**: Real-time (10Hz recommended)
+- **Theme**: Dark mode with color-coded parameters
+
+---
+
+## 🧪 Testing
+
+### Run Tests
+```bash
+pytest tests/                    # Run all tests
+pytest tests/test_csv_parser.py  # Test specific module
+```
+
+### Sample Data
+- **Location**: `tests/enhanced_sample_data.csv`
+- **Duration**: ~120 seconds of telemetry
+- **Parameters**: Full telemetry dataset with GPS
+
+---
+
+## 📈 Performance
+
+### System Requirements
+- **Python**: 3.8 or higher
+- **Memory**: 4GB RAM minimum
+- **Storage**: 100MB for application + data
+- **Display**: 1024x768 minimum (1920x1080 recommended)
+
+### Data Handling
+- **Real-time**: Up to 100Hz data acquisition
+- **Replay**: Unlimited CSV file size
+- **Memory**: Efficient circular buffers
+- **Storage**: Compressed CSV logging
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Submit a pull request
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+
+---
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 📞 Support
+
+- **Issues**: [GitHub Issues](https://github.com/marcle-bert26-ui/fs-telemetry/issues)
+- **Documentation**: [docs/](docs/)
+- **Examples**: [examples/](examples/)
+
+---
+
+**Built with ❤️ for EIGSI Formula Student Team**
 ```
 
 **Note**: On Windows, use `py app.py` instead of `python app.py`

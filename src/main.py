@@ -9,20 +9,24 @@ This application provides:
 - Offline replay and analysis capability
 """
 
-import config
-from acquisition.serial_source import SerialSource
-from acquisition.csv_source import CSVSource
-from parsing.csv_parser import parse_csv_line, TelemetryData
-from data.telemetry_manager import TelemetryManager
-from log_handlers.csv_logger import CSVLogger
-from visualization.console_display import ConsoleDisplay
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+import app_config as config
+from serial_source import SerialSource
+from csv_source import CSVSource
+from csv_parser import parse_csv_line, TelemetryData
+from telemetry_manager import TelemetryManager
+from csv_logger import CSVLogger
+from console_display import ConsoleDisplay
 
 
 def main_live():
     """
     Main loop for LIVE mode: Read from Arduino, log to CSV, display in real-time.
     """
-    print("\n🟢 LIVE MODE - Reading from Arduino")
+    print("\n[GREEN] LIVE MODE - Reading from Arduino")
     print(f"Port: {config.SERIAL_PORT} | Baudrate: {config.SERIAL_BAUDRATE}\n")
     
     # Initialize components
@@ -61,7 +65,7 @@ def main_live():
             display.update(data)
     
     except KeyboardInterrupt:
-        print("\n\n⏹️  Acquisition stopped by user\n")
+        print("\n\n[STOP] Acquisition stopped by user\n")
     
     finally:
         # Cleanup
@@ -76,7 +80,7 @@ def main_replay(csv_file: str):
     
     :param csv_file: Path to CSV file to replay
     """
-    print(f"\n🔄 REPLAY MODE - Reading from {csv_file}\n")
+    print(f"\n[REPLAY] REPLAY MODE - Reading from {csv_file}\n")
     
     # Initialize components
     try:

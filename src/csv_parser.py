@@ -136,11 +136,11 @@ def parse_csv_line(line: str) -> Optional[TelemetryData]:
                 tire_temp_rr=float(values[17])
             )
         else:
-            print(f"! Parse error: Expected 5 or 18 fields, got {len(values)} | Line: {line}")
+            # print(f"ERROR: Expected 5 or 18 fields, got {len(values)} | Line: {line}")
             return None
         
         return data
         
     except (ValueError, IndexError) as e:
-        print(f"! Parse error: {e} | Line: {line}")
+        # print(f"ERROR: {e} | Line: {line}")
         return None

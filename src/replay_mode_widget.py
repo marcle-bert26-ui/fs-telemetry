@@ -7,12 +7,12 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushBut
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from PyQt5.QtGui import QFont
 
-from acquisition.csv_source import CSVSource
-from parsing.csv_parser import parse_csv_line
-from data.telemetry_manager import TelemetryManager
-from visualization.telemetry_charts import TelemetryCharts
-from gui.temporal_analysis_widget import TemporalAnalysisWidget
-from gui.file_selector import FileSelectorWidget
+from csv_source import CSVSource
+from csv_parser import parse_csv_line
+from telemetry_manager import TelemetryManager
+from telemetry_charts import TelemetryCharts
+from temporal_analysis_widget import TemporalAnalysisWidget
+from file_selector_widget import FileSelectorWidget
 
 
 class ReplayThread(QThread):
@@ -87,11 +87,41 @@ class ReplayModeWidget(QWidget):
         # Connect temporal analysis sync signal to charts
         self.temporal_analysis.data_sync_signal.connect(self.charts.update_data)
         
+        # Connect temporal analysis slider directly to charts for cursor control
+        self.temporal_analysis.range_slider.valueChanged.connect(self.update_charts_cursor_direct)
+        
         self.init_ui()
     
     def init_ui(self):
         """Initialize the user interface."""
-        layout = QVBoxLayout(self)
+        # Create main scroll area for global scrolling
+        main_scroll = QScrollArea()
+        main_scroll.setWidgetResizable(True)
+        main_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        main_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        main_scroll.setStyleSheet("""
+            QScrollArea {
+                background: #1a1a1a;
+                border: none;
+            }
+            QScrollBar:vertical {
+                background: #2d2d2d;
+                width: 12px;
+                border-radius: 6px;
+            }
+            QScrollBar::handle:vertical {
+                background: #4ecdc4;
+                border-radius: 6px;
+                min-height: 20px;
+            }
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                height: 0px;
+            }
+        """)
+        
+        # Create main widget to contain all content
+        main_widget = QWidget()
+        layout = QVBoxLayout(main_widget)
         layout.setSpacing(15)
         layout.setContentsMargins(20, 20, 20, 20)
         
@@ -154,7 +184,6 @@ class ReplayModeWidget(QWidget):
         
         # Left panel - Current Data
         left_panel = QWidget()
-        left_panel.setMaximumWidth(300)
         
         # Create scroll area for left panel
         left_scroll = QScrollArea()
@@ -271,7 +300,19 @@ class ReplayModeWidget(QWidget):
         right_panel.setLayout(right_layout)
         main_layout.addWidget(right_panel)
         
+        # Configurer les proportions 50/50
+        main_layout.setStretch(0, 1)  # Gauche : 1 partie
+        main_layout.setStretch(1, 1)  # Droite : 1 partie (50/50)
+        
         layout.addLayout(main_layout)
+        
+        # Set the main widget as the scroll area's widget
+        main_scroll.setWidget(main_widget)
+        
+        # Add scroll area to the main layout
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.addWidget(main_scroll)
     
     def on_file_selected(self, file_path):
         """Handle file selection from file selector."""
@@ -294,6 +335,13 @@ class ReplayModeWidget(QWidget):
         if not self.current_file:
             return
         
+        # Clear existing data
+        self.charts.clear_data()
+        self.temporal_analysis.clear_data()
+        
+        # Load all data from file for initial display
+        self.load_all_data_for_charts(self.current_file)
+        
         self.replay_thread = ReplayThread(self.current_file)
         self.replay_thread.data_received.connect(self.on_data_received)
         self.replay_thread.error_occurred.connect(self.on_error)
@@ -305,6 +353,59 @@ class ReplayModeWidget(QWidget):
         self.play_btn.setEnabled(False)
         self.stop_btn.setEnabled(True)
         self.log_text.append("+ Replay started")
+    
+    def load_all_data_for_charts(self, file_path):
+        """Load all data from CSV file for initial chart display (curves only, no points)."""
+        try:
+            from csv_parser import parse_csv_line
+            import csv
+            
+            # Collect all data first
+            all_data = []
+            with open(file_path, 'r', encoding='utf-8') as file:
+                reader = csv.DictReader(file)
+                for row in reader:
+                    data = parse_csv_line(row)
+                    if data:
+                        all_data.append(data)
+            
+            # Load data into charts without triggering point updates
+            for data in all_data:
+                # Temporarily disable point updates in charts
+                if hasattr(self.charts, '_loading_data'):
+                    self.charts._loading_data = True
+                else:
+                    self.charts._loading_data = True
+                
+                # Update charts with data (curves only)
+                self.charts.update_data(data)
+                
+                # Update temporal analysis with all data (disable points during loading)
+                if hasattr(self.temporal_analysis, 'temporal_graphs'):
+                    self.temporal_analysis.temporal_graphs._loading_data = True
+                self.temporal_analysis._loading_data = True  # Also disable in TemporalAnalysis
+                self.temporal_analysis.update_data(data)
+                self.temporal_analysis._loading_data = False  # Re-enable after
+                if hasattr(self.temporal_analysis, 'temporal_graphs'):
+                    self.temporal_analysis.temporal_graphs._loading_data = False
+            
+            # Re-enable point updates
+            self.charts._loading_data = False
+            
+            # FORCER la mise à jour du curseur après le chargement
+            if hasattr(self.temporal_analysis, 'parent_widget') and self.temporal_analysis.parent_widget and hasattr(self.temporal_analysis.parent_widget, 'charts') and self.temporal_analysis.parent_widget.charts.time_data:
+                time_data = self.temporal_analysis.parent_widget.charts.time_data
+                max_time = int(time_data[-1])  # Durée max en secondes (arrondie)
+                self.temporal_analysis.range_slider.setMaximum(max_time)
+            else:
+                # Solution de secours : utiliser directement les données des charts
+                if self.charts and hasattr(self.charts, 'time_data') and self.charts.time_data:
+                    time_data = self.charts.time_data
+                    max_time = int(time_data[-1])  # Durée max en secondes (arrondie)
+                    self.temporal_analysis.range_slider.setMaximum(max_time)
+                        
+        except Exception as e:
+            print(f"Error loading data for charts: {e}")
     
     def stop_replay(self):
         """Stop CSV file replay and reset all data."""
@@ -327,17 +428,17 @@ class ReplayModeWidget(QWidget):
         # Clear temporal analysis data
         self.temporal_analysis.clear_data()
         
-        # Reset current data labels to 0
-        self.speed_label.setText("0.0 km/h")
-        self.rpm_label.setText("0")
-        self.throttle_label.setText("0%")
-        self.temp_label.setText("0.0°C")
+        # Reset current data labels to default
+        self.speed_label.setText("-- km/h")
+        self.rpm_label.setText("--")
+        self.throttle_label.setText("--%")
+        self.temp_label.setText("--°C")
         
-        # Reset statistics labels to 0
-        self.max_speed_label.setText("0.0 km/h")
-        self.avg_speed_label.setText("0.0 km/h")
-        self.max_rpm_label.setText("0")
-        self.avg_temp_label.setText("0.0°C")
+        # Reset statistics labels to default
+        self.max_speed_label.setText("--")
+        self.avg_speed_label.setText("--")
+        self.max_rpm_label.setText("--")
+        self.avg_temp_label.setText("--")
         self.data_count_label.setText("0")
         
         # Reset telemetry manager
@@ -352,8 +453,10 @@ class ReplayModeWidget(QWidget):
             self.throttle_label.setText(f"{data.throttle:.0f}%")
             self.temp_label.setText(f"{data.battery_temp:.1f}°C")
             
-            # Update charts with TelemetryData
+            # Update charts with TelemetryData (skip automatic points during replay)
+            self.charts._loading_data = True  # Skip automatic points
             self.charts.update_data(data)
+            self.charts._loading_data = False  # Re-enable for cursor
             
             # Update temporal analysis
             self.temporal_analysis.update_data(data)
@@ -377,6 +480,92 @@ class ReplayModeWidget(QWidget):
         """Handle replay errors."""
         self.log_text.append(f"X Error: {error_msg}")
         self.stop_replay()
+    
+    def update_charts_cursor_direct(self, value):
+        """Update charts cursor position directly from slider value."""
+        if not self.charts or not hasattr(self.charts, 'time_data') or not self.charts.time_data:
+            return
+        
+        if value >= len(self.charts.time_data):
+            return
+        
+        current_time = self.charts.time_data[value]
+        
+        # Remove only previous cursor markers (items with symbols)
+        for plot_name in ['speed_rpm_plot', 'throttle_temp_plot', 'g_force_plot', 'accel_plot']:
+            plot = getattr(self.charts, plot_name, None)
+            if plot:
+                items_to_remove = []
+                for item in plot.listDataItems():
+                    if hasattr(item, 'symbol') and item.symbol is not None:
+                        items_to_remove.append(item)
+                for item in items_to_remove:
+                    plot.removeItem(item)
+        
+        # Add current point markers to all charts plots
+        plots_to_mark = [
+            (self.charts.speed_rpm_plot, 'speed_data', 'rpm_data', '#22c55e', '#f59e0b'),
+            (self.charts.throttle_temp_plot, 'throttle_data', 'battery_temp_data', '#3b82f6', '#ef4444'),
+            (self.charts.g_force_plot, 'g_force_lat_data', 'g_force_long_data', '#ef4444', '#3b82f6'),
+            (self.charts.accel_plot, 'accel_x_data', 'accel_y_data', '#8b5cf6', '#14b8a6'),
+        ]
+        
+        for plot, data1_attr, data2_attr, color1, color2 in plots_to_mark:
+            if plot and hasattr(self.charts, data1_attr) and hasattr(self.charts, data2_attr):
+                data1 = getattr(self.charts, data1_attr)
+                data2 = getattr(self.charts, data2_attr)
+                
+                if value < len(data1) and value < len(data2):
+                    # Add current point markers without clearing the plot - COMMENTED TO REMOVE EXTRA POINTS
+                    # plot.plot([current_time], [data1[value]], pen=None, symbol='o', symbolSize=12, symbolBrush=color1, symbolPen='darkred')
+                    # plot.plot([current_time], [data2[value]], pen=None, symbol='s', symbolSize=12, symbolBrush=color2, symbolPen='darkorange')
+                    pass  # No action needed - points are handled by update_telemetry_charts
+        
+        # Also call the temporal analysis update_telemetry_charts function
+        if hasattr(self.temporal_analysis, 'data_selector'):
+            self.temporal_analysis.data_selector.update_telemetry_charts(self.charts, value)
+    
+    def update_charts_cursor(self, min_val, max_val):
+        """Update charts cursor position based on temporal analysis slider."""
+        if not self.charts or not hasattr(self.charts, 'time_data') or not self.charts.time_data:
+            return
+        
+        # Use max_val as the current point index
+        point_idx = max_val
+        if point_idx >= len(self.charts.time_data):
+            return
+        
+        current_time = self.charts.time_data[point_idx]
+        
+        # Remove only previous cursor markers (items with symbols)
+        for plot_name in ['speed_rpm_plot', 'throttle_temp_plot', 'g_force_plot', 'accel_plot']:
+            plot = getattr(self.charts, plot_name, None)
+            if plot:
+                items_to_remove = []
+                for item in plot.listDataItems():
+                    if hasattr(item, 'symbol') and item.symbol is not None:
+                        items_to_remove.append(item)
+                for item in items_to_remove:
+                    plot.removeItem(item)
+        
+        # Add current point markers to all charts plots
+        plots_to_mark = [
+            (self.charts.speed_rpm_plot, 'speed_data', 'rpm_data', '#22c55e', '#f59e0b'),
+            (self.charts.throttle_temp_plot, 'throttle_data', 'battery_temp_data', '#3b82f6', '#ef4444'),
+            (self.charts.g_force_plot, 'g_force_lat_data', 'g_force_long_data', '#ef4444', '#3b82f6'),
+            (self.charts.accel_plot, 'accel_x_data', 'accel_y_data', '#8b5cf6', '#14b8a6'),
+        ]
+        
+        for plot, data1_attr, data2_attr, color1, color2 in plots_to_mark:
+            if plot and hasattr(self.charts, data1_attr) and hasattr(self.charts, data2_attr):
+                data1 = getattr(self.charts, data1_attr)
+                data2 = getattr(self.charts, data2_attr)
+                
+                if point_idx < len(data1) and point_idx < len(data2):
+                    # Add current point markers without clearing the plot - COMMENTED TO REMOVE EXTRA POINTS
+                    # plot.plot([current_time], [data1[point_idx]], pen=None, symbol='o', symbolSize=10, symbolBrush=color1, symbolPen='darkred')
+                    # plot.plot([current_time], [data2[point_idx]], pen=None, symbol='s', symbolSize=10, symbolBrush=color2, symbolPen='darkorange')
+                    pass  # No action needed - points are handled by update_telemetry_charts
     
     def on_status_changed(self, status):
         """Update status log."""

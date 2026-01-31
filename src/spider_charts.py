@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGroupBox,
 from PyQt5.QtGui import QPainter, QPen, QBrush, QColor, QPolygonF, QFont
 from PyQt5.QtCore import Qt, pyqtSignal, QPointF, QRectF
 from collections import deque
-from parsing.csv_parser import TelemetryData
+from csv_parser import TelemetryData
 
 
 class SpiderChartWidget(QWidget):
@@ -198,27 +198,7 @@ class GForcesSpiderWidget(QWidget):
         current_group.setLayout(current_layout)
         charts_layout.addWidget(current_group)
         
-        # Comparison spider chart
-        comparison_group = QGroupBox("G-Forces Comparison")
-        comparison_layout = QVBoxLayout()
-        
-        self.comparison_spider = SpiderChartWidget(
-            "G-Forces Comparison",
-            ["Lateral G", "Longitudinal G", "Vertical G"],
-            max_value=3.0
-        )
-        comparison_layout.addWidget(self.comparison_spider)
-        
-        # Comparison info
-        self.comparison_info = QLabel("Select time points to compare G-forces")
-        self.comparison_info.setFont(QFont("Arial", 10))
-        self.comparison_info.setStyleSheet("color: #6b7280; padding: 5px; background: #f3f4f6; border-radius: 5px;")
-        comparison_layout.addWidget(self.comparison_info)
-        
-        comparison_group.setLayout(comparison_layout)
-        charts_layout.addWidget(comparison_group)
-        
-        # Statistics
+        # Statistics (garder seulement les statistiques utiles)
         stats_group = QGroupBox("G-Forces Statistics")
         stats_layout = QGridLayout()
         
@@ -283,25 +263,45 @@ class GForcesSpiderWidget(QWidget):
         # Update statistics
         self.update_statistics()
     
-    def update_position(self, data: TelemetryData):
+    def update_position(self, data):
         """Update display for specific time position."""
-        if data:
+        if not data:
+            return
+        
+        # Handle different data types safely
+        try:
+            if hasattr(data, 'g_force_lat'):  # TelemetryData object
+                g_forces = [data.g_force_lat, data.g_force_long, data.g_force_vert]
+                label = f"t={data.time_ms/1000:.1f}s"
+            elif isinstance(data, (list, tuple)) and len(data) >= 2:  # GPS coordinates
+                # Use default g-force values when only GPS coordinates are provided
+                g_forces = [0.0, 0.0, 0.0]  # Default to 0 when no g-force data
+                label = f"GPS: ({data[0]:.6f}, {data[1]:.6f})"
+            elif isinstance(data, (int, float)):  # Single float value
+                # Use default values for single float
+                g_forces = [0.0, 0.0, 0.0]
+                label = f"Value: {data:.2f}"
+            else:
+                # Skip if data format is not recognized
+                return
+            
             # Update current spider chart
             self.current_spider.clear_data()
-            self.current_spider.add_data(
-                [data.g_force_lat, data.g_force_long, data.g_force_vert],
-                f"t={data.time_ms/1000:.1f}s"
-            )
+            self.current_spider.add_data(g_forces, label)
             
-            # Update current values display
-            self.current_values.setText(
-                f"Lateral: {data.g_force_lat:.2f}g | "
-                f"Longitudinal: {data.g_force_long:.2f}g | "
-                f"Vertical: {data.g_force_vert:.2f}g"
-            )
-            
-            # Émettre le signal avec les données actuelles pour synchroniser avec les graphiques de droite
-            self.current_data_changed.emit(data)
+            # Update current values display only if TelemetryData
+            if hasattr(data, 'g_force_lat'):
+                self.current_values.setText(
+                    f"Lateral: {data.g_force_lat:.2f}g | "
+                    f"Longitudinal: {data.g_force_long:.2f}g | "
+                    f"Vertical: {data.g_force_vert:.2f}g"
+                )
+                
+                # Émettre le signal avec les données actuelles pour synchroniser avec les graphiques de droite
+                self.current_data_changed.emit(data)
+        except Exception as e:
+            # Silently handle any errors to prevent crashes
+            pass
     
     def update_statistics(self):
         """Update G-forces statistics."""
@@ -323,10 +323,8 @@ class GForcesSpiderWidget(QWidget):
         self.telemetry_data.clear()
         
         self.current_spider.clear_data()
-        self.comparison_spider.clear_data()
         
         self.current_values.setText("Lateral: 0.0g | Longitudinal: 0.0g | Vertical: 0.0g")
-        self.comparison_info.setText("Select time points to compare G-forces")
         
         self.max_lat_label.setText("--")
         self.max_long_label.setText("--")

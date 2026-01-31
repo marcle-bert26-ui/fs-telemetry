@@ -4,7 +4,7 @@
 
 # Serial Configuration
 SERIAL_PORT = "COM3"  # Change to your Arduino port
-SERIAL_BAUDRATE = 115200
+SERIAL_BAUDRATE = 9600
 SERIAL_TIMEOUT = 1
 
 # Data Logging
@@ -12,7 +12,7 @@ LOG_DIRECTORY = "data_logs"
 LOG_FILENAME_PREFIX = "run"
 
 # Simulation / Replay Mode
-SIMULATION_MODE = True  # Set to True to replay from CSV instead of reading Arduino
+SIMULATION_MODE = False  # Set to True to replay from CSV instead of reading Arduino
 DEFAULT_CSV_FILE = "tests/circuit_loop_data.csv"  # Default file for simulation mode
 
 # CSV Format
