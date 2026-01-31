@@ -10,7 +10,7 @@ import pyqtgraph as pg
 import numpy as np
 
 from spider_charts import GForcesSpiderWidget
-from csv_parser import TelemetryData
+from .csv_parser import TelemetryData
 
 
 class CompactTrackMap(QWidget):

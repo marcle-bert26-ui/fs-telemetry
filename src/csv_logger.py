@@ -36,7 +36,7 @@ class CSVLogger:
         self.csv_writer = csv.writer(self.file_handle)
         
         # Write header
-        from csv_parser import CSV_HEADER
+        from .csv_parser import CSV_HEADER
         self.csv_writer.writerow(CSV_HEADER)
         
         return self.filename

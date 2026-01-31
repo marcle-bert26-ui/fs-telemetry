@@ -2,7 +2,7 @@
 CSV Source - Read telemetry data from CSV files for replay and analysis.
 """
 
-from telemetry_source import TelemetrySource
+from .telemetry_source import TelemetrySource
 
 
 class CSVSource(TelemetrySource):

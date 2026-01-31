@@ -8,8 +8,8 @@ from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from PyQt5.QtGui import QFont
 
 from csv_source import CSVSource
-from csv_parser import parse_csv_line
-from telemetry_manager import TelemetryManager
+from .csv_parser import parse_csv_line
+from .telemetry_manager import TelemetryManager
 from telemetry_charts import TelemetryCharts
 from temporal_analysis_widget import TemporalAnalysisWidget
 from file_selector_widget import FileSelectorWidget
@@ -357,7 +357,7 @@ class ReplayModeWidget(QWidget):
     def load_all_data_for_charts(self, file_path):
         """Load all data from CSV file for initial chart display (curves only, no points)."""
         try:
-            from csv_parser import parse_csv_line
+            from .csv_parser import parse_csv_line
             import csv
             
             # Collect all data first
