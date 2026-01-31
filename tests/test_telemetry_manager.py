@@ -4,8 +4,8 @@ Tests data storage, history, and statistics.
 """
 
 import pytest
-from data.telemetry_manager import TelemetryManager
-from parsing.csv_parser import TelemetryData
+from src.telemetry_manager import TelemetryManager
+from src.csv_parser import TelemetryData
 
 
 class TestTelemetryManager:

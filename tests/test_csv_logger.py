@@ -6,8 +6,8 @@ Tests file creation, writing, and data integrity.
 import pytest
 import csv
 from pathlib import Path
-from log_handlers.csv_logger import CSVLogger
-from parsing.csv_parser import TelemetryData
+from src.csv_logger import CSVLogger
+from src.csv_parser import TelemetryData
 import tempfile
 import shutil
 
@@ -50,7 +50,7 @@ class TestCSVLogger:
     def test_logger_initialization(self, temp_log_dir):
         """Test that logger initializes and creates file"""
         # Temporarily change log directory
-        import config
+        import app_config as config
         original_dir = config.LOG_DIRECTORY
         config.LOG_DIRECTORY = temp_log_dir
         
@@ -67,7 +67,7 @@ class TestCSVLogger:
     
     def test_logger_writes_header(self, temp_log_dir):
         """Test that logger writes CSV header"""
-        import config
+        import app_config as config
         original_dir = config.LOG_DIRECTORY
         config.LOG_DIRECTORY = temp_log_dir
         
@@ -86,7 +86,7 @@ class TestCSVLogger:
     
     def test_logger_writes_data(self, temp_log_dir, sample_data):
         """Test that logger writes data correctly"""
-        import config
+        import app_config as config
         original_dir = config.LOG_DIRECTORY
         config.LOG_DIRECTORY = temp_log_dir
         
@@ -106,7 +106,7 @@ class TestCSVLogger:
     
     def test_logger_writes_multiple_rows(self, temp_log_dir):
         """Test writing multiple data points"""
-        import config
+        import app_config as config
         original_dir = config.LOG_DIRECTORY
         config.LOG_DIRECTORY = temp_log_dir
         
@@ -148,7 +148,7 @@ class TestCSVLogger:
     
     def test_logger_generates_unique_filenames(self, temp_log_dir):
         """Test that logger generates unique timestamped filenames"""
-        import config
+        import app_config as config
         original_dir = config.LOG_DIRECTORY
         config.LOG_DIRECTORY = temp_log_dir
         
@@ -168,7 +168,7 @@ class TestCSVLogger:
     
     def test_logger_handles_invalid_data(self, temp_log_dir):
         """Test logger with None data"""
-        import config
+        import app_config as config
         original_dir = config.LOG_DIRECTORY
         config.LOG_DIRECTORY = temp_log_dir
         

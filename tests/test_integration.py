@@ -8,10 +8,10 @@ import tempfile
 import os
 from pathlib import Path
 
-from acquisition.csv_source import CSVSource
-from parsing.csv_parser import parse_csv_line, TelemetryData
-from data.telemetry_manager import TelemetryManager
-from log_handlers.csv_logger import CSVLogger
+from src.csv_source import CSVSource
+from src.csv_parser import parse_csv_line, TelemetryData
+from src.telemetry_manager import TelemetryManager
+from src.csv_logger import CSVLogger
 
 
 class TestIntegration:

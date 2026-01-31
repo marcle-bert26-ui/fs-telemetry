@@ -7,7 +7,7 @@ import pytest
 from pathlib import Path
 import tempfile
 import shutil
-from acquisition.csv_source import CSVSource
+from src.csv_source import CSVSource
 
 
 class TestCSVSource:

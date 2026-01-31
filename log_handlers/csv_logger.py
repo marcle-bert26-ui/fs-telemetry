@@ -6,7 +6,7 @@ import csv
 from datetime import datetime
 from pathlib import Path
 from src.csv_parser import TelemetryData
-import config
+import app_config as config
 
 
 class CSVLogger:

@@ -4,7 +4,7 @@ Tests data parsing, validation, and error handling.
 """
 
 import pytest
-from parsing.csv_parser import parse_csv_line, TelemetryData
+from src.csv_parser import parse_csv_line, TelemetryData
 
 
 class TestParseCSVLine:
