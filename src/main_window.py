@@ -11,6 +11,7 @@ from PyQt5.QtGui import QFont, QIcon, QPixmap, QKeySequence
 
 from live_mode_widget import LiveModeWidget
 from replay_mode_widget import ReplayModeWidget
+from file_selector_widget import FileSelectorWidget
 
 
 class MainWindow(QMainWindow):

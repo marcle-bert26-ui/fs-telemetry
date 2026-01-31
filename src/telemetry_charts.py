@@ -19,7 +19,7 @@ except:
     # Fallback si setConfigOptions n'est pas disponible
     pass
 from collections import deque
-from .csv_parser import TelemetryData
+from csv_parser import TelemetryData
 
 
 class TelemetryCharts(QWidget):

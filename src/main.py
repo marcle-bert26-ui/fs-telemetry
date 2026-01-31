@@ -16,8 +16,8 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 import app_config as config
 from serial_source import SerialSource
 from csv_source import CSVSource
-from .csv_parser import parse_csv_line, TelemetryData
-from .telemetry_manager import TelemetryManager
+from csv_parser import parse_csv_line, TelemetryData
+from telemetry_manager import TelemetryManager
 from csv_logger import CSVLogger
 from console_display import ConsoleDisplay
 
