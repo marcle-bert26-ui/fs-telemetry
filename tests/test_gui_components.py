@@ -23,25 +23,26 @@ class TestGUIComponents:
     """Test GUI components functionality."""
     
     def test_gui_imports(self):
-        """Test that GUI modules can be imported."""
+        """Test that GUI modules can be imported"""
         try:
-            from gui.replay_mode_widget import ReplayModeWidget
-            from gui.file_selector import FileSelectorWidget
-            assert True  # Imports successful
+            from src.replay_mode_widget import ReplayModeWidget
+            from src.live_mode_widget import LiveModeWidget
+            from src.telemetry_charts import TelemetryCharts
+            from src.temporal_analysis_widget import TemporalAnalysisWidget
         except ImportError as e:
             pytest.fail(f"Failed to import GUI modules: {e}")
     
     def test_telemetry_charts_import(self):
         """Test that telemetry charts can be imported."""
         try:
-            from visualization.telemetry_charts import TelemetryCharts
+            from src.telemetry_charts import TelemetryCharts
             assert TelemetryCharts is not None
         except ImportError as e:
             pytest.fail(f"Failed to import TelemetryCharts: {e}")
     
     def test_telemetry_data_creation(self):
         """Test TelemetryData creation for GUI tests."""
-        from parsing.csv_parser import TelemetryData
+        from src.csv_parser import TelemetryData
         
         # Create test data
         test_data = TelemetryData(
@@ -75,21 +76,20 @@ class TestGUIComponents:
     def test_main_window_import(self):
         """Test that main window can be imported."""
         try:
-            from gui.main_window import MainWindow
+            from src.main_window import MainWindow
             assert MainWindow is not None
         except ImportError as e:
             pytest.fail(f"Failed to import MainWindow: {e}")
     
     def test_gui_module_structure(self):
         """Test that GUI modules have correct structure."""
-        import gui
-        import visualization
+        import src
         
         # Check main modules exist
-        assert hasattr(gui, 'replay_mode_widget')
-        assert hasattr(gui, 'main_window')
-        assert hasattr(visualization, 'telemetry_charts')
-        assert hasattr(visualization, 'spider_charts')
+        assert hasattr(src, 'replay_mode_widget')
+        assert hasattr(src, 'main_window')
+        assert hasattr(src, 'telemetry_charts')
+        assert hasattr(src, 'spider_charts')
     
     def test_pyqtgraph_mock_works(self):
         """Test that pyqtgraph mock is working correctly."""
@@ -104,10 +104,10 @@ class TestGUIComponents:
     
     def test_gui_components_classes_exist(self):
         """Test that GUI component classes exist."""
-        from gui.replay_mode_widget import ReplayModeWidget
-        from gui.file_selector import FileSelectorWidget
-        from gui.main_window import MainWindow
-        from visualization.telemetry_charts import TelemetryCharts
+        from src.replay_mode_widget import ReplayModeWidget
+        from src.file_selector_widget import FileSelectorWidget
+        from src.main_window import MainWindow
+        from src.telemetry_charts import TelemetryCharts
         
         # Check classes exist
         assert ReplayModeWidget is not None

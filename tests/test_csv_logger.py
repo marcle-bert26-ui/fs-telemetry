@@ -56,10 +56,11 @@ class TestCSVLogger:
         
         try:
             logger = CSVLogger("test_run.csv")
+            logger.start_logging()
             
-            assert logger.filepath.exists()
-            assert logger.file is not None
-            assert logger.writer is not None
+            assert Path(logger.filepath).exists()
+            assert logger.file_handle is not None
+            assert logger.csv_writer is not None
             
             logger.close()
         finally:
@@ -73,6 +74,7 @@ class TestCSVLogger:
         
         try:
             logger = CSVLogger("test_header.csv")
+            logger.start_logging()
             logger.close()
             
             # Read the file and check header
@@ -92,6 +94,7 @@ class TestCSVLogger:
         
         try:
             logger = CSVLogger("test_data.csv")
+            logger.start_logging()
             logger.log(sample_data)
             logger.close()
             
@@ -112,6 +115,7 @@ class TestCSVLogger:
         
         try:
             logger = CSVLogger("test_multiple.csv")
+            logger.start_logging()
             
             for i in range(5):
                 data = TelemetryData(
@@ -154,11 +158,13 @@ class TestCSVLogger:
         
         try:
             logger1 = CSVLogger()
-            filename1 = logger1.filepath.name
+            logger1.start_logging()
+            filename1 = logger1.filepath
             logger1.close()
             
             logger2 = CSVLogger()
-            filename2 = logger2.filepath.name
+            logger2.start_logging()
+            filename2 = logger2.filepath
             logger2.close()
             
             # Filenames should be different
@@ -174,6 +180,7 @@ class TestCSVLogger:
         
         try:
             logger = CSVLogger("test_none.csv")
+            logger.start_logging()
             # Should not crash when logging None data
             data = None  # Define data variable first
             if data is not None:
