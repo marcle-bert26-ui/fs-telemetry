@@ -142,9 +142,16 @@ class CompactTrackMap(QWidget):
         """Clear track data."""
         self.car_position.setData([], [])
         self.trail.setData([], [])
+        self.trail_points = []
         self.origin_lat = None
         self.origin_lon = None
-        self.trail_points = []
+        self.fixed_range = False
+    
+    def enableAutoRange(self):
+        """Enable auto-range for the track map plot."""
+        if hasattr(self.plot, 'enableAutoRange'):
+            self.plot.enableAutoRange()
+        self.plot.autoRange()
         self.plot.setRange(xRange=[-10, 10], yRange=[-10, 10])
         self.info_label.setText("📍 No GPS | -- km/h")
 

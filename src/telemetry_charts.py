@@ -102,6 +102,10 @@ class TelemetryCharts(QWidget):
             if hasattr(temporal_analysis, 'track_map'):
                 temporal_analysis.track_map.enableAutoRange()
                 temporal_analysis.track_map.update()
+        elif hasattr(self, 'parent_widget') and self.parent_widget and hasattr(self.parent_widget, 'track_map'):
+            # Direct access if parent has track_map
+            self.parent_widget.track_map.enableAutoRange()
+            self.parent_widget.track_map.update()
     
     def full_auto_zoom(self):
         """Enable full auto-zoom for all plots (automatic view adjustment)."""
@@ -126,6 +130,10 @@ class TelemetryCharts(QWidget):
             if hasattr(temporal_analysis, 'track_map'):
                 temporal_analysis.track_map.enableAutoRange()
                 temporal_analysis.track_map.update()
+        elif hasattr(self, 'parent_widget') and self.parent_widget and hasattr(self.parent_widget, 'track_map'):
+            # Direct access if parent has track_map
+            self.parent_widget.track_map.enableAutoRange()
+            self.parent_widget.track_map.update()
     
     def init_ui(self):
         """Initialize user interface with charts."""

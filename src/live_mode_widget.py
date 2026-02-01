@@ -105,6 +105,10 @@ class LiveModeWidget(QWidget):
         self.charts = TelemetryCharts()
         self.temporal_analysis = TemporalAnalysisWidget()
         
+        # Set parent references for track map access
+        self.charts.parent_widget = self
+        self.temporal_analysis.parent_widget = self
+        
         self.init_ui()
     
     def init_ui(self):

@@ -84,6 +84,10 @@ class ReplayModeWidget(QWidget):
         self.replay_thread = None
         self.current_file = None
         
+        # Set parent references for track map access
+        self.charts.parent_widget = self
+        self.temporal_analysis.parent_widget = self
+        
         # Connect temporal analysis sync signal to charts
         self.temporal_analysis.data_sync_signal.connect(self.charts.update_data)
         
