@@ -5,11 +5,11 @@ Test script for temporal analysis widget
 
 import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from PyQt5.QtWidgets import QApplication
-from temporal_analysis_widget import TemporalAnalysisWidget
-from csv_parser import TelemetryData
+from src.temporal_analysis_widget import TemporalAnalysisWidget
+from src.csv_parser import TelemetryData
 
 def test_temporal_widget():
     """Test the temporal analysis widget with sample data."""

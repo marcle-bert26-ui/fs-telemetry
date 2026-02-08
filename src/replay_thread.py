@@ -5,8 +5,8 @@ Handles CSV file replay functionality.
 
 from PyQt5.QtCore import QThread, pyqtSignal, QTimer
 import csv
-from csv_parser import parse_csv_line
-from telemetry_manager import TelemetryManager
+from .csv_parser import parse_csv_line
+from .telemetry_manager import TelemetryManager
 
 class ReplayThread(QThread):
     """Thread for replaying CSV telemetry data."""

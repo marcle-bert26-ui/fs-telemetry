@@ -10,7 +10,7 @@ import tempfile
 import csv
 
 # Add project root to path
-sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import app_config as config
 from src.csv_parser import parse_csv_line, TelemetryData

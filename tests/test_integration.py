@@ -6,7 +6,11 @@ Tests end-to-end workflows and component interactions.
 import pytest
 import tempfile
 import os
+import sys
 from pathlib import Path
+
+# Add project root to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from src.csv_source import CSVSource
 from src.csv_parser import parse_csv_line, TelemetryData
