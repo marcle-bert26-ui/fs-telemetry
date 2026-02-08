@@ -11,7 +11,7 @@ from telemetry_manager import TelemetryManager
 class ReplayThread(QThread):
     """Thread for replaying CSV telemetry data."""
     
-    data_received = pyqtSignal(object)
+    data_received = pyqtSignal(object)  # Peut être un int (index) ou TelemetryData
     error_occurred = pyqtSignal(str)
     status_changed = pyqtSignal(str)
     finished = pyqtSignal()
@@ -38,25 +38,19 @@ class ReplayThread(QThread):
             
             self.status_changed.emit(f"Loaded {len(self.rows)} rows")
             
-            # Replay data
-            for i, row in enumerate(self.rows):
-                if not self.running:
-                    break
+            # Replay data - COMMENTÉ pour chargement instantané
+            # for i, row in enumerate(self.rows):
+            #   if not self.running:
+            #        break
                 
                 # Parse CSV row
-                data = parse_csv_line(','.join(row))
-                if data:
-                    self.manager.update(data)
-                    self.data_received.emit(data)
-                    
-                    # Update status
-                    if i % 10 == 0:
-                        self.status_changed.emit(f"Replaying row {i+1}/{len(self.rows)}")
+            #   data = parse_csv_line(','.join(row))
+            #   if data:
+            #       self.manager.update(data)
+            #       self.data_received.emit(i)  # Émettre l'index pour éviter les doublons
                 
                 # Small delay for realistic replay speed
-                self.msleep(50)
-            
-            self.status_changed.emit("Replay complete")
+            #   self.msleep(5)  # Beaucoup plus rapide pour gérer les milliers de données
             
         except Exception as e:
             self.error_occurred.emit(f"Replay error: {str(e)}")

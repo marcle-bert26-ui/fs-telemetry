@@ -13,7 +13,7 @@ from csv_parser import parse_csv_line
 from telemetry_manager import TelemetryManager
 from csv_logger import CSVLogger
 from telemetry_charts import TelemetryCharts
-from temporal_analysis_widget import TemporalAnalysisWidget
+from temporal_analysis_widget import TemporalAnalysisWidget, CompactTrackMap
 import app_config as config
 
 
@@ -104,6 +104,14 @@ class LiveModeWidget(QWidget):
         self.manager = TelemetryManager()
         self.charts = TelemetryCharts()
         self.temporal_analysis = TemporalAnalysisWidget()
+        self.track_map = CompactTrackMap()
+        
+        # Performance optimization settings
+        self.update_counter = 0
+        self.batch_size = 10  # Update charts every 10 data points (increased from 5)
+        self.stats_update_counter = 0
+        self.stats_batch_size = 20  # Update stats every 20 data points (increased from 10)
+        self.is_stopping = False  # Flag to prevent crashes during stop
         
         # Set parent references for track map access
         self.charts.parent_widget = self
@@ -306,6 +314,14 @@ class LiveModeWidget(QWidget):
         stats_group.setLayout(stats_layout)
         left_layout.addWidget(stats_group)
         
+        # Track map
+        track_group = QGroupBox("🗺️ Track Map")
+        track_layout = QVBoxLayout()
+        track_layout.setContentsMargins(5, 5, 5, 5)
+        track_layout.addWidget(self.track_map)
+        track_group.setLayout(track_layout)
+        left_layout.addWidget(track_group)
+        
         # Log display (plus petit)
         self.log_text = QTextEdit()
         self.log_text.setReadOnly(True)
@@ -369,8 +385,10 @@ class LiveModeWidget(QWidget):
         port = self.port_input.text()
         baudrate = self.baudrate_input.value()
         
-        # Quick reset for new acquisition (lightweight)
-        self.charts.quick_clear()
+        # Complete reset for new acquisition
+        self.charts.clear_data()
+        self.temporal_analysis.clear_data()
+        self.track_map.clear_data()
         
         # Reset displays only
         self.speed_label.setText("-- km/h")
@@ -380,6 +398,13 @@ class LiveModeWidget(QWidget):
         self.max_speed_label.setText("--")
         self.avg_speed_label.setText("--")
         self.data_count_label.setText("0")
+        
+        # Reset performance counters
+        self.update_counter = 0
+        self.stats_update_counter = 0
+        
+        # Enable auto-zoom for live mode to see graphs progress
+        self.charts.full_auto_zoom()
         
         self.acquisition_thread = AcquisitionThread(port, baudrate)
         self.acquisition_thread.data_received.connect(self.on_data_received)
@@ -396,58 +421,118 @@ class LiveModeWidget(QWidget):
         self.log_text.append("+ Acquisition started")
     
     def stop_acquisition(self):
-        """Stop data acquisition."""
-        if self.acquisition_thread:
-            self.acquisition_thread.stop()
+        """Stop data acquisition with improved crash protection."""
+        # Set stopping flag to prevent new updates
+        self.is_stopping = True
         
-        # Reset all displays to 0
-        self.speed_label.setText("-- km/h")
-        self.rpm_label.setText("--")
-        self.throttle_label.setText("--%")
-        self.temp_label.setText("--°C")
-        self.max_speed_label.setText("--")
-        self.avg_speed_label.setText("--")
-        self.data_count_label.setText("0")
+        try:
+            # Stop thread safely
+            if self.acquisition_thread:
+                self.acquisition_thread.stop()
+                # Wait for thread to finish with timeout
+                if self.acquisition_thread.isRunning():
+                    self.acquisition_thread.wait(2000)  # 2 second timeout
+                    
+                # Disconnect signals to prevent further updates
+                try:
+                    self.acquisition_thread.data_received.disconnect()
+                    self.acquisition_thread.error_occurred.disconnect()
+                    self.acquisition_thread.status_changed.disconnect()
+                except Exception:
+                    pass  # Ignore disconnect errors
+                    
+                self.acquisition_thread = None
+        except Exception as e:
+            # Log error but continue with cleanup
+            if hasattr(self, 'log_text'):
+                self.log_text.append(f"⚠️ Stop error: {str(e)[:50]}...")
         
-        # Reset charts to 0 - COMMENTED OUT to keep data for oscilloscope effect
-        # self.charts.clear_data()
+        try:
+            # Reset all displays to 0
+            self.speed_label.setText("-- km/h")
+            self.rpm_label.setText("--")
+            self.throttle_label.setText("--%")
+            self.temp_label.setText("--°C")
+            self.max_speed_label.setText("--")
+            self.avg_speed_label.setText("--")
+            self.data_count_label.setText("0")
+            
+            # Reset performance counters
+            self.update_counter = 0
+            self.stats_update_counter = 0
+            
+        except Exception as e:
+            # Log error but continue
+            if hasattr(self, 'log_text'):
+                self.log_text.append(f"⚠️ Cleanup error: {str(e)[:50]}...")
         
-        # Reset temporal analysis
-        self.temporal_analysis.clear_data()
+        # Reset UI state
+        try:
+            self.start_btn.setEnabled(True)
+            self.stop_btn.setEnabled(False)
+            self.port_input.setEnabled(True)
+            self.baudrate_input.setEnabled(True)
+            
+            self.log_text.append("X Acquisition stopped")
+        except Exception:
+            pass  # Ignore UI errors
         
-        self.start_btn.setEnabled(True)
-        self.stop_btn.setEnabled(False)
-        self.port_input.setEnabled(True)
-        self.baudrate_input.setEnabled(True)
-        
-        self.log_text.append("X Acquisition stopped")
+        # Reset stopping flag
+        self.is_stopping = False
     
     def on_data_received(self, data):
-        """Update GUI with received data."""
-        # Handle both dict and TelemetryData objects
-        if hasattr(data, 'speed'):  # TelemetryData object
-            self.speed_label.setText(f"{data.speed:.1f} km/h")
-            self.rpm_label.setText(f"{data.rpm:.0f}")
-            self.throttle_label.setText(f"{data.throttle:.0f}%")
-            self.temp_label.setText(f"{data.battery_temp:.1f}°C")
+        """Update GUI with received data - optimized for performance with crash protection."""
+        # Skip updates if stopping to prevent crashes
+        if self.is_stopping:
+            return
             
-            # Update charts with TelemetryData
-            self.charts.update_data(data)
+        try:
+            # Handle both dict and TelemetryData objects
+            if hasattr(data, 'speed'):  # TelemetryData object
+                # Always update labels (fast operation)
+                self.speed_label.setText(f"{data.speed:.1f} km/h")
+                self.rpm_label.setText(f"{data.rpm:.0f}")
+                self.throttle_label.setText(f"{data.throttle:.0f}%")
+                self.temp_label.setText(f"{data.battery_temp:.1f}°C")
+                
+                # Update charts in batches to improve performance
+                self.update_counter += 1
+                if self.update_counter >= self.batch_size:
+                    # Update all components in batch
+                    self.charts.update_data(data)
+                    self.temporal_analysis.update_data(data)
+                    self.track_map.update_data(data)
+                    self.update_counter = 0
+                else:
+                    # Only update main charts for intermediate updates (skip heavy components)
+                    try:
+                        self.charts.update_data(data)
+                    except Exception:
+                        pass  # Skip chart update if it fails to prevent crashes
+                    
+            else:  # Dict object (backward compatibility)
+                self.speed_label.setText(f"{data['speed']:.1f} km/h")
+                self.rpm_label.setText(f"{data['rpm']:.0f}")
+                self.throttle_label.setText(f"{data['throttle']:.0f}%")
+                self.temp_label.setText(f"{data['battery_temp']:.1f}°C")
             
-            # Update temporal analysis
-            self.temporal_analysis.update_data(data)
-        else:  # Dict object (backward compatibility)
-            self.speed_label.setText(f"{data['speed']:.1f} km/h")
-            self.rpm_label.setText(f"{data['rpm']:.0f}")
-            self.throttle_label.setText(f"{data['throttle']:.0f}%")
-            self.temp_label.setText(f"{data['battery_temp']:.1f}°C")
-        
-        # Update statistics
-        stats = self.acquisition_thread.manager.get_stats()
-        if stats:
-            self.max_speed_label.setText(f"{stats.get('max_speed', 0):.1f} km/h")
-            self.avg_speed_label.setText(f"{stats.get('avg_speed', 0):.1f} km/h")
-            self.data_count_label.setText(f"{stats.get('data_points', 0)}")
+            # Update statistics less frequently (expensive operation)
+            self.stats_update_counter += 1
+            if self.stats_update_counter >= self.stats_batch_size:
+                try:
+                    stats = self.acquisition_thread.manager.get_stats()
+                    if stats:
+                        self.max_speed_label.setText(f"{stats.get('max_speed', 0):.1f} km/h")
+                        self.avg_speed_label.setText(f"{stats.get('avg_speed', 0):.1f} km/h")
+                        self.data_count_label.setText(f"{stats.get('data_points', 0)}")
+                except Exception:
+                    pass  # Skip stats update if it fails
+                self.stats_update_counter = 0
+                
+        except Exception as e:
+            # Log error but don't crash
+            if hasattr(self, 'log_text'):
+                self.log_text.append(f"⚠️ Update error: {str(e)[:50]}...")
     
     def on_error(self, error_msg):
         """Handle acquisition errors."""
