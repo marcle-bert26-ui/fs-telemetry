@@ -104,6 +104,7 @@ class TestIntegration:
         
         with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
             logger = CSVLogger(f.name)
+            logger.start_logging()  # Démarrer le logger
             
             # Simulate data updates
             for i in range(5):
@@ -139,10 +140,10 @@ class TestIntegration:
                 
                 # Should have header + 5 data lines
                 assert len(lines) == 6
-                assert "time_ms;speed_kmh;rpm;throttle;battery_temp" in lines[0]
+                assert "time_ms,speed,rpm,throttle,battery_temp" in lines[0]
                 
                 # Check first data line
-                assert "1000;50.0;5000;75.0;60.0" in lines[1]
+                assert "1000,50.0,5000,75.0,60.0" in lines[1]
     
     def test_complete_data_pipeline(self, sample_csv_file):
         """Test complete data pipeline: source -> parser -> manager -> stats"""
