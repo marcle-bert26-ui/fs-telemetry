@@ -7,7 +7,7 @@ import pytest
 import csv
 from pathlib import Path
 from src.csv_logger import CSVLogger
-from src.csv_parser import TelemetryData
+from src.csv_parser import TelemetryData, CSV_HEADER
 import tempfile
 import shutil
 
@@ -79,10 +79,10 @@ class TestCSVLogger:
             
             # Read the file and check header
             with open(logger.filepath, 'r') as f:
-                reader = csv.reader(f, delimiter=';')
+                reader = csv.reader(f, delimiter=',')
                 header = next(reader)
             
-            assert header == config.CSV_HEADER
+            assert header == CSV_HEADER
         finally:
             config.LOG_DIRECTORY = original_dir
     

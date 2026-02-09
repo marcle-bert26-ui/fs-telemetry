@@ -8,6 +8,7 @@ from pathlib import Path
 from unittest.mock import Mock, patch, MagicMock
 import tempfile
 import csv
+import os
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -119,18 +120,19 @@ def test_logger_demo():
             
             # Create logger
             logger = CSVLogger()
-            print(f"✓ Created logger: {logger.filepath.name}\n")
+            logger.start_logging()
+            print(f"Created logger: {os.path.basename(logger.filepath)}\n")
             
             # Log some sample data
             print("Logging telemetry data:")
             print("-" * 70)
             
             sample_data = [
-                TelemetryData(100, 10.5, 2000, 25, 35.2),
-                TelemetryData(200, 15.3, 2500, 40, 35.5),
-                TelemetryData(300, 22.1, 3200, 60, 36.1),
-                TelemetryData(400, 28.7, 3800, 80, 36.8),
-                TelemetryData(500, 32.5, 4200, 100, 37.2),
+                TelemetryData(100, 10.5, 2000, 25, 35.2, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 48.8566, 2.3522, 100, 25, 25, 25, 25),
+                TelemetryData(200, 15.3, 2500, 40, 35.5, 0.1, 0.2, 0.9, 0.1, 0.1, 0.1, 48.8561, 2.3523, 102, 26, 26, 26, 26),
+                TelemetryData(300, 22.1, 3200, 60, 36.1, 0.2, 0.3, 0.8, 0.2, 0.2, 0.2, 48.8556, 2.3524, 105, 27, 27, 27, 27),
+                TelemetryData(400, 28.7, 3800, 80, 36.8, 0.3, 0.4, 0.7, 0.3, 0.3, 0.3, 48.8551, 2.3525, 108, 28, 28, 28, 28),
+                TelemetryData(500, 32.5, 4200, 100, 37.2, 0.4, 0.5, 0.6, 0.4, 0.4, 0.4, 48.8546, 2.3526, 110, 29, 29, 29, 29),
             ]
             
             for i, data in enumerate(sample_data, 1):
@@ -153,7 +155,7 @@ def test_logger_demo():
                     print(f"  Row {i}:  {line.strip()}")
             
             print("-" * 70)
-            print(f"✓ File saved successfully: {logger.filepath.name}\n")
+            print(f"File saved successfully: {os.path.basename(logger.filepath)}\n")
             
         finally:
             config.LOG_DIRECTORY = original_dir

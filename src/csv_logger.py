@@ -60,13 +60,13 @@ class CSVLogger:
                     data.acceleration_x,
                     data.acceleration_y,
                     data.acceleration_z,
+                    data.gps_latitude,
+                    data.gps_longitude,
+                    data.gps_altitude,
                     data.tire_temp_fl,
                     data.tire_temp_fr,
                     data.tire_temp_rl,
-                    data.tire_temp_rr,
-                    data.lap_time,
-                    data.sector_time,
-                    data.fuel_level
+                    data.tire_temp_rr
                 ]
                 self.csv_writer.writerow(row)
     
