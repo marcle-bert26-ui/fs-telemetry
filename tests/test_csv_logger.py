@@ -10,6 +10,7 @@ from src.csv_logger import CSVLogger
 from src.csv_parser import TelemetryData, CSV_HEADER
 import tempfile
 import shutil
+import time
 
 
 class TestCSVLogger:
@@ -161,6 +162,9 @@ class TestCSVLogger:
             logger1.start_logging()
             filename1 = logger1.filepath
             logger1.close()
+            
+            # Small delay to ensure different timestamps
+            time.sleep(0.001)  # 1ms delay
             
             logger2 = CSVLogger()
             logger2.start_logging()

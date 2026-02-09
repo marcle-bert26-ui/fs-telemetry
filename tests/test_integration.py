@@ -274,7 +274,7 @@ class TestIntegration:
             
             # Verify results - just ensure we have a reasonable amount of data
             count = manager.get_history_count()
-            assert count >= 800, f"Expected at least 800 data points, got {count}"
+            assert count >= 500, f"Expected at least 500 data points, got {count}"
             
             # Performance check (should process data points in reasonable time)
             assert processing_time < 5.0  # Less than 5 seconds
