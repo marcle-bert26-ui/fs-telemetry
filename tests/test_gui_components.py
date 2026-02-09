@@ -28,6 +28,7 @@ class TestGUIComponents:
             from src.replay_mode_widget import ReplayModeWidget
             from src.live_mode_widget import LiveModeWidget
             from src.telemetry_charts import TelemetryCharts
+            from src.spider_charts import GForcesSpiderWidget
             from src.temporal_analysis_widget import TemporalAnalysisWidget
         except ImportError as e:
             pytest.fail(f"Failed to import GUI modules: {e}")
@@ -76,10 +77,10 @@ class TestGUIComponents:
     def test_main_window_import(self):
         """Test that main window can be imported."""
         try:
-            from src.main_window import MainWindow
-            assert MainWindow is not None
+            from src.app import FS_TelemetryApp
+            assert FS_TelemetryApp is not None
         except ImportError as e:
-            pytest.fail(f"Failed to import MainWindow: {e}")
+            pytest.fail(f"Failed to import FS_TelemetryApp: {e}")
     
     def test_gui_module_structure(self):
         """Test that GUI modules have correct structure."""
@@ -87,9 +88,10 @@ class TestGUIComponents:
         
         # Check main modules exist
         assert hasattr(src, 'replay_mode_widget')
-        assert hasattr(src, 'main_window')
+        assert hasattr(src, 'live_mode_widget')
         assert hasattr(src, 'telemetry_charts')
         assert hasattr(src, 'spider_charts')
+        assert hasattr(src, 'temporal_analysis_widget')
     
     def test_pyqtgraph_mock_works(self):
         """Test that pyqtgraph mock is working correctly."""
@@ -106,11 +108,11 @@ class TestGUIComponents:
         """Test that GUI component classes exist."""
         from src.replay_mode_widget import ReplayModeWidget
         from src.file_selector_widget import FileSelectorWidget
-        from src.main_window import MainWindow
+        from src.app import FS_TelemetryApp
         from src.telemetry_charts import TelemetryCharts
         
         # Check classes exist
         assert ReplayModeWidget is not None
         assert FileSelectorWidget is not None
-        assert MainWindow is not None
+        assert FS_TelemetryApp is not None
         assert TelemetryCharts is not None

@@ -19,7 +19,7 @@ except:
     # Fallback si setConfigOptions n'est pas disponible
     pass
 from collections import deque
-from csv_parser import TelemetryData
+from .csv_parser import TelemetryData
 
 
 class TelemetryCharts(QWidget):
@@ -122,6 +122,8 @@ class TelemetryCharts(QWidget):
                 # Enable auto-zoom for both axes
                 plot.enableAutoRange(axis='x', enable=True)
                 plot.enableAutoRange(axis='y', enable=True)
+                # Force view update
+                plot.getViewBox().enableAutoRange()
                 plot.update()
         
         # Also auto-zoom the track map if available
@@ -353,7 +355,7 @@ class TelemetryCharts(QWidget):
             color = colors[i % len(colors)]
             legend_name = legend_names.get(y_label, y_label)
             try:
-                # Modern curve with glow effect
+                # Modern curve with glow effect - initialize with empty data to avoid (0,0) points
                 curve = plot_widget.plot(
                     pen=pg.mkPen(
                         color=color, 
@@ -363,9 +365,13 @@ class TelemetryCharts(QWidget):
                     ), 
                     name=legend_name
                 )
+                # Initialize with empty data to prevent automatic (0,0) points
+                curve.setData([], [])
             except Exception as e:
                 print(f"! Error creating curve: {e}")
                 curve = plot_widget.plot(pen={'color': color, 'width': 3}, name=legend_name)
+                # Initialize with empty data to prevent automatic (0,0) points
+                curve.setData([], [])
             curves.append(curve)
             
             # Modern current point with glow effect - COMMENTED TO REMOVE PERMANENT POINTS
@@ -394,29 +400,34 @@ class TelemetryCharts(QWidget):
         if not isinstance(data, TelemetryData):
             return
         
+        # Validate data to prevent None values that cause diagonals
+        if (data.time_ms is None or data.speed is None or data.rpm is None or
+            data.throttle is None or data.battery_temp is None):
+            return  # Skip invalid data points
+        
         # Convert time to seconds for better display
         # Keep original time for data, but track display offset
         time_seconds = data.time_ms / 1000.0
         
-        # Update data storage
+        # Update data storage with validated data
         self.time_data.append(time_seconds)
-        self.speed_data.append(data.speed)
-        self.rpm_data.append(data.rpm / 100)  # Scale RPM for better visualization
-        self.throttle_data.append(data.throttle)
-        self.battery_temp_data.append(data.battery_temp)
+        self.speed_data.append(data.speed if data.speed is not None else 0)
+        self.rpm_data.append((data.rpm / 100) if data.rpm is not None else 0)  # Scale RPM for better visualization
+        self.throttle_data.append(data.throttle if data.throttle is not None else 0)
+        self.battery_temp_data.append(data.battery_temp if data.battery_temp is not None else 0)
         
-        self.g_force_lat_data.append(data.g_force_lat)
-        self.g_force_long_data.append(data.g_force_long)
-        self.g_force_vert_data.append(data.g_force_vert)
+        self.g_force_lat_data.append(data.g_force_lat if data.g_force_lat is not None else 0)
+        self.g_force_long_data.append(data.g_force_long if data.g_force_long is not None else 0)
+        self.g_force_vert_data.append(data.g_force_vert if data.g_force_vert is not None else 0)
         
-        self.accel_x_data.append(data.acceleration_x)
-        self.accel_y_data.append(data.acceleration_y)
-        self.accel_z_data.append(data.acceleration_z)
+        self.accel_x_data.append(data.acceleration_x if data.acceleration_x is not None else 0)
+        self.accel_y_data.append(data.acceleration_y if data.acceleration_y is not None else 0)
+        self.accel_z_data.append(data.acceleration_z if data.acceleration_z is not None else 0)
         
-        self.tire_fl_data.append(data.tire_temp_fl)
-        self.tire_fr_data.append(data.tire_temp_fr)
-        self.tire_rl_data.append(data.tire_temp_rl)
-        self.tire_rr_data.append(data.tire_temp_rr)
+        self.tire_fl_data.append(data.tire_temp_fl if data.tire_temp_fl is not None else 0)
+        self.tire_fr_data.append(data.tire_temp_fr if data.tire_temp_fr is not None else 0)
+        self.tire_rl_data.append(data.tire_temp_rl if data.tire_temp_rl is not None else 0)
+        self.tire_rr_data.append(data.tire_temp_rr if data.tire_temp_rr is not None else 0)
         
         # Update plots
         self.update_plots()
@@ -429,45 +440,65 @@ class TelemetryCharts(QWidget):
         # Use original time data (no offset) - let the view handle the scrolling
         time_array = np.array(self.time_data)
         
+        # Check if first time is > 0 to avoid diagonal lines from origin
+        first_time = time_array[0] if len(time_array) > 0 else 0
+        
         try:
-            # Update ONLY curves - NO points
-            # Update Speed & RPM plot
+            # Create valid data mask (exclude None and invalid values)
+            valid_mask = np.array([t is not None for t in self.time_data])
+            valid_time = time_array[valid_mask]
+            
+            # Update Speed & RPM plot with valid data only
             if len(self.speed_data) > 0:
-                self.speed_rpm_plot.curves[0].setData(time_array, np.array(self.speed_data))
+                speed_array = np.array(self.speed_data)[valid_mask]
+                self.speed_rpm_plot.curves[0].setData(valid_time, speed_array)
             if len(self.rpm_data) > 0:
-                self.speed_rpm_plot.curves[1].setData(time_array, np.array(self.rpm_data))
+                rpm_array = np.array(self.rpm_data)[valid_mask]
+                self.speed_rpm_plot.curves[1].setData(valid_time, rpm_array)
             
             # Update Throttle & Battery Temperature plot
             if len(self.throttle_data) > 0:
-                self.throttle_temp_plot.curves[0].setData(time_array, np.array(self.throttle_data))
+                throttle_array = np.array(self.throttle_data)[valid_mask]
+                self.throttle_temp_plot.curves[0].setData(valid_time, throttle_array)
             if len(self.battery_temp_data) > 0:
-                self.throttle_temp_plot.curves[1].setData(time_array, np.array(self.battery_temp_data))
+                temp_array = np.array(self.battery_temp_data)[valid_mask]
+                self.throttle_temp_plot.curves[1].setData(valid_time, temp_array)
             
             # Update G-Forces plot
             if len(self.g_force_lat_data) > 0:
-                self.g_force_plot.curves[0].setData(time_array, np.array(self.g_force_lat_data))
+                g_lat_array = np.array(self.g_force_lat_data)[valid_mask]
+                self.g_force_plot.curves[0].setData(valid_time, g_lat_array)
             if len(self.g_force_long_data) > 0:
-                self.g_force_plot.curves[1].setData(time_array, np.array(self.g_force_long_data))
+                g_long_array = np.array(self.g_force_long_data)[valid_mask]
+                self.g_force_plot.curves[1].setData(valid_time, g_long_array)
             if len(self.g_force_vert_data) > 0:
-                self.g_force_plot.curves[2].setData(time_array, np.array(self.g_force_vert_data))
+                g_vert_array = np.array(self.g_force_vert_data)[valid_mask]
+                self.g_force_plot.curves[2].setData(valid_time, g_vert_array)
             
             # Update Acceleration plot
             if len(self.accel_x_data) > 0:
-                self.accel_plot.curves[0].setData(time_array, np.array(self.accel_x_data))
+                accel_x_array = np.array(self.accel_x_data)[valid_mask]
+                self.accel_plot.curves[0].setData(valid_time, accel_x_array)
             if len(self.accel_y_data) > 0:
-                self.accel_plot.curves[1].setData(time_array, np.array(self.accel_y_data))
+                accel_y_array = np.array(self.accel_y_data)[valid_mask]
+                self.accel_plot.curves[1].setData(valid_time, accel_y_array)
             if len(self.accel_z_data) > 0:
-                self.accel_plot.curves[2].setData(time_array, np.array(self.accel_z_data))
+                accel_z_array = np.array(self.accel_z_data)[valid_mask]
+                self.accel_plot.curves[2].setData(valid_time, accel_z_array)
             
             # Update Tire Temperatures plot
             if len(self.tire_fl_data) > 0:
-                self.tire_temp_plot.curves[0].setData(time_array, np.array(self.tire_fl_data))
+                tire_fl_array = np.array(self.tire_fl_data)[valid_mask]
+                self.tire_temp_plot.curves[0].setData(valid_time, tire_fl_array)
             if len(self.tire_fr_data) > 0:
-                self.tire_temp_plot.curves[1].setData(time_array, np.array(self.tire_fr_data))
+                tire_fr_array = np.array(self.tire_fr_data)[valid_mask]
+                self.tire_temp_plot.curves[1].setData(valid_time, tire_fr_array)
             if len(self.tire_rl_data) > 0:
-                self.tire_temp_plot.curves[2].setData(time_array, np.array(self.tire_rl_data))
+                tire_rl_array = np.array(self.tire_rl_data)[valid_mask]
+                self.tire_temp_plot.curves[2].setData(valid_time, tire_rl_array)
             if len(self.tire_rr_data) > 0:
-                self.tire_temp_plot.curves[3].setData(time_array, np.array(self.tire_rr_data))
+                tire_rr_array = np.array(self.tire_rr_data)[valid_mask]
+                self.tire_temp_plot.curves[3].setData(valid_time, tire_rr_array)
                 
         except Exception as e:
             print(f"! Error updating plots: {e}")
@@ -507,12 +538,13 @@ class TelemetryCharts(QWidget):
                 # Clear all curves
                 for curve in plot.curves:
                     curve.clear()
+                    curve.setData([], [])  # Ensure empty data to prevent (0,0) points
                 
-                # Reset red points to origin (0,0) - skip None points
+                # Clear current points - don't set to (0,0) to avoid diagonals
                 if hasattr(plot, 'current_points'):
                     for current_point in plot.current_points:
                         if current_point is not None:  # Skip None points
-                            current_point.setData([0], [0])
+                            current_point.clear()  # Clear instead of setting to (0,0)
                 
                 # Reset plot view to show origin with appropriate ranges
                 view_box = plot.getViewBox()

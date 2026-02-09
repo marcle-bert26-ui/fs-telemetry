@@ -9,8 +9,8 @@ from PyQt5.QtGui import QFont
 import pyqtgraph as pg
 import numpy as np
 
-from spider_charts import GForcesSpiderWidget
-from csv_parser import TelemetryData
+from .spider_charts import GForcesSpiderWidget
+from .csv_parser import TelemetryData
 
 
 class CompactTrackMap(QWidget):
@@ -137,6 +137,9 @@ class CompactTrackMap(QWidget):
         
         # Emit signal
         self.position_changed.emit(data)
+        
+        # Enable auto-range for continuous zoom like other charts
+        self.enableAutoRange()
     
     def clear_data(self):
         """Clear track data."""
@@ -148,12 +151,27 @@ class CompactTrackMap(QWidget):
         self.fixed_range = False
     
     def enableAutoRange(self):
-        """Enable auto-range for the track map plot."""
+        """Enable auto-range for track map plot."""
         if hasattr(self.plot, 'enableAutoRange'):
             self.plot.enableAutoRange()
         self.plot.autoRange()
-        self.plot.setRange(xRange=[-10, 10], yRange=[-10, 10])
-        self.info_label.setText("📍 No GPS | -- km/h")
+        
+        # Pour le mode live, garder le zoom continu comme les autres graphiques
+        # Ne pas réinitialiser les données, juste ajuster la vue automatiquement
+        # Cela permet un zoom continu avec l'ajout de nouvelles données
+        if self.trail_points:
+            trail_x, trail_y = zip(*self.trail_points)
+            min_x, max_x = min(trail_x), max(trail_x)
+            min_y, max_y = min(trail_y), max(trail_y)
+            
+            # Ajouter une marge de 10%
+            x_margin = (max_x - min_x) * 0.1 if max_x != min_x else 10
+            y_margin = (max_y - min_y) * 0.1 if max_y != min_y else 10
+            
+            self.plot.setRange(xRange=[min_x - x_margin, max_x + x_margin], 
+                             yRange=[min_y - y_margin, max_y + y_margin])
+        else:
+            self.plot.setRange(xRange=[-10, 10], yRange=[-10, 10])
 
 
 class TemporalGraphs(QWidget):
@@ -358,7 +376,8 @@ class CompactDataSelector(QWidget):
                 background-color: #7c3aed;
             }
         """)
-        self.auto_btn.clicked.connect(self.start_auto_replay)
+        # DISABLED to prevent auto-scrolling and crashes in replay mode
+        # self.auto_btn.clicked.connect(self.start_auto_replay)
         button_layout.addWidget(self.auto_btn)
         
         self.recent_btn = QPushButton("🕐 50")
@@ -376,7 +395,8 @@ class CompactDataSelector(QWidget):
                 background-color: #2563eb;
             }
         """)
-        self.recent_btn.clicked.connect(lambda: self.range_slider.setValue(max(0, self.range_slider.maximum() - min(49, self.range_slider.maximum()))))
+        # DISABLED to prevent auto-scrolling and crashes in replay mode
+        # self.recent_btn.clicked.connect(lambda: self.range_slider.setValue(max(0, self.range_slider.maximum() - min(49, self.range_slider.maximum()))))
         button_layout.addWidget(self.recent_btn)
         
         self.all_btn = QPushButton("📋 All")
@@ -394,7 +414,8 @@ class CompactDataSelector(QWidget):
                 background-color: #059669;
             }
         """)
-        self.all_btn.clicked.connect(lambda: self.range_slider.setValue(self.range_slider.maximum()))
+        # DISABLED to prevent auto-scrolling and crashes in replay mode
+        # self.all_btn.clicked.connect(lambda: self.range_slider.setValue(self.range_slider.maximum()))
         button_layout.addWidget(self.all_btn)
         
         button_layout.addStretch()
@@ -405,8 +426,14 @@ class CompactDataSelector(QWidget):
         self.info_label.setText(f"📈 Temps {value}s / {self.range_slider.maximum()}s")
         self.range_changed.emit(0, value)
     
-    def update_telemetry_charts(self, charts, point_idx):
-        """Update existing TelemetryCharts with current point."""
+    def update_telemetry_charts(self, charts, point_idx, enable_points=True):
+        """Update existing TelemetryCharts with current point.
+        
+        Args:
+            charts: TelemetryCharts instance
+            point_idx: Current point index
+            enable_points: Whether to create cursor points (True for replay, False for live)
+        """
         if not charts or not hasattr(charts, 'time_data') or not charts.time_data:
             return
         
@@ -429,103 +456,108 @@ class CompactDataSelector(QWidget):
             
             # Update Speed & RPM plot - use all data
             if hasattr(charts, 'speed_rpm_plot') and charts.speed_rpm_plot:
-                if len(charts.speed_data) > 0 and point_idx < len(charts.speed_data):
-                    # Create point if it doesn't exist
-                    if charts.speed_rpm_plot.current_points[0] is None:
-                        charts.speed_rpm_plot.current_points[0] = charts.speed_rpm_plot.plot(
-                            pen=None, symbol='o', symbolSize=8, symbolBrush='#22c55e', symbolPen='darkred'
-                        )
-                    charts.speed_rpm_plot.current_points[0].setData([current_time], [charts.speed_data[point_idx]])
-                if len(charts.rpm_data) > 0 and point_idx < len(charts.rpm_data):
-                    if charts.speed_rpm_plot.current_points[1] is None:
-                        charts.speed_rpm_plot.current_points[1] = charts.speed_rpm_plot.plot(
-                            pen=None, symbol='o', symbolSize=8, symbolBrush='#f59e0b', symbolPen='darkred'
-                        )
-                    charts.speed_rpm_plot.current_points[1].setData([current_time], [charts.rpm_data[point_idx]])
+                if enable_points:
+                    if len(charts.speed_data) > 0 and point_idx < len(charts.speed_data):
+                        # Create point if it doesn't exist
+                        if charts.speed_rpm_plot.current_points[0] is None:
+                            charts.speed_rpm_plot.current_points[0] = charts.speed_rpm_plot.plot(
+                                pen=None, symbol='o', symbolSize=8, symbolBrush='#22c55e', symbolPen='darkred'
+                            )
+                        charts.speed_rpm_plot.current_points[0].setData([current_time], [charts.speed_data[point_idx]])
+                    if len(charts.rpm_data) > 0 and point_idx < len(charts.rpm_data):
+                        if charts.speed_rpm_plot.current_points[1] is None:
+                            charts.speed_rpm_plot.current_points[1] = charts.speed_rpm_plot.plot(
+                                pen=None, symbol='o', symbolSize=8, symbolBrush='#f59e0b', symbolPen='darkred'
+                            )
+                        charts.speed_rpm_plot.current_points[1].setData([current_time], [charts.rpm_data[point_idx]])
             
             # Update Throttle & Battery Temperature plot - use all data
             if hasattr(charts, 'throttle_temp_plot') and charts.throttle_temp_plot:
-                if len(charts.throttle_data) > 0 and point_idx < len(charts.throttle_data):
-                    if charts.throttle_temp_plot.current_points[0] is None:
-                        charts.throttle_temp_plot.current_points[0] = charts.throttle_temp_plot.plot(
-                            pen=None, symbol='o', symbolSize=8, symbolBrush='#3b82f6', symbolPen='darkred'
-                        )
-                    charts.throttle_temp_plot.current_points[0].setData([current_time], [charts.throttle_data[point_idx]])
-                if len(charts.battery_temp_data) > 0 and point_idx < len(charts.battery_temp_data):
-                    if charts.throttle_temp_plot.current_points[1] is None:
-                        charts.throttle_temp_plot.current_points[1] = charts.throttle_temp_plot.plot(
-                            pen=None, symbol='o', symbolSize=8, symbolBrush='#ef4444', symbolPen='darkred'
-                        )
-                    charts.throttle_temp_plot.current_points[1].setData([current_time], [charts.battery_temp_data[point_idx]])
+                if enable_points:
+                    if len(charts.throttle_data) > 0 and point_idx < len(charts.throttle_data):
+                        if charts.throttle_temp_plot.current_points[0] is None:
+                            charts.throttle_temp_plot.current_points[0] = charts.throttle_temp_plot.plot(
+                                pen=None, symbol='o', symbolSize=8, symbolBrush='#3b82f6', symbolPen='darkred'
+                            )
+                        charts.throttle_temp_plot.current_points[0].setData([current_time], [charts.throttle_data[point_idx]])
+                    if len(charts.battery_temp_data) > 0 and point_idx < len(charts.battery_temp_data):
+                        if charts.throttle_temp_plot.current_points[1] is None:
+                            charts.throttle_temp_plot.current_points[1] = charts.throttle_temp_plot.plot(
+                                pen=None, symbol='o', symbolSize=8, symbolBrush='#ef4444', symbolPen='darkred'
+                            )
+                        charts.throttle_temp_plot.current_points[1].setData([current_time], [charts.battery_temp_data[point_idx]])
             
             # Update G-Forces plot - use all data
             if hasattr(charts, 'g_force_plot') and charts.g_force_plot:
-                if len(charts.g_force_lat_data) > 0 and point_idx < len(charts.g_force_lat_data):
-                    if charts.g_force_plot.current_points[0] is None:
-                        charts.g_force_plot.current_points[0] = charts.g_force_plot.plot(
-                            pen=None, symbol='o', symbolSize=8, symbolBrush='#ef4444', symbolPen='darkred'
-                        )
-                    charts.g_force_plot.current_points[0].setData([current_time], [charts.g_force_lat_data[point_idx]])
-                if len(charts.g_force_long_data) > 0 and point_idx < len(charts.g_force_long_data):
-                    if charts.g_force_plot.current_points[1] is None:
-                        charts.g_force_plot.current_points[1] = charts.g_force_plot.plot(
-                            pen=None, symbol='o', symbolSize=8, symbolBrush='#3b82f6', symbolPen='darkred'
-                        )
-                    charts.g_force_plot.current_points[1].setData([current_time], [charts.g_force_long_data[point_idx]])
-                if len(charts.g_force_vert_data) > 0 and point_idx < len(charts.g_force_vert_data):
-                    if charts.g_force_plot.current_points[2] is None:
-                        charts.g_force_plot.current_points[2] = charts.g_force_plot.plot(
-                            pen=None, symbol='o', symbolSize=8, symbolBrush='#22c55e', symbolPen='darkred'
-                        )
-                    charts.g_force_plot.current_points[2].setData([current_time], [charts.g_force_vert_data[point_idx]])
+                if enable_points:
+                    if len(charts.g_force_lat_data) > 0 and point_idx < len(charts.g_force_lat_data):
+                        if charts.g_force_plot.current_points[0] is None:
+                            charts.g_force_plot.current_points[0] = charts.g_force_plot.plot(
+                                pen=None, symbol='o', symbolSize=8, symbolBrush='#ef4444', symbolPen='darkred'
+                            )
+                        charts.g_force_plot.current_points[0].setData([current_time], [charts.g_force_lat_data[point_idx]])
+                    if len(charts.g_force_long_data) > 0 and point_idx < len(charts.g_force_long_data):
+                        if charts.g_force_plot.current_points[1] is None:
+                            charts.g_force_plot.current_points[1] = charts.g_force_plot.plot(
+                                pen=None, symbol='o', symbolSize=8, symbolBrush='#3b82f6', symbolPen='darkred'
+                            )
+                        charts.g_force_plot.current_points[1].setData([current_time], [charts.g_force_long_data[point_idx]])
+                    if len(charts.g_force_vert_data) > 0 and point_idx < len(charts.g_force_vert_data):
+                        if charts.g_force_plot.current_points[2] is None:
+                            charts.g_force_plot.current_points[2] = charts.g_force_plot.plot(
+                                pen=None, symbol='o', symbolSize=8, symbolBrush='#22c55e', symbolPen='darkred'
+                            )
+                        charts.g_force_plot.current_points[2].setData([current_time], [charts.g_force_vert_data[point_idx]])
             
             # Update Acceleration plot - use all data
             if hasattr(charts, 'accel_plot') and charts.accel_plot:
-                if len(charts.accel_x_data) > 0 and point_idx < len(charts.accel_x_data):
-                    if charts.accel_plot.current_points[0] is None:
-                        charts.accel_plot.current_points[0] = charts.accel_plot.plot(
-                            pen=None, symbol='o', symbolSize=8, symbolBrush='#8b5cf6', symbolPen='darkred'
-                        )
-                    charts.accel_plot.current_points[0].setData([current_time], [charts.accel_x_data[point_idx]])
-                if len(charts.accel_y_data) > 0 and point_idx < len(charts.accel_y_data):
-                    if charts.accel_plot.current_points[1] is None:
-                        charts.accel_plot.current_points[1] = charts.accel_plot.plot(
-                            pen=None, symbol='o', symbolSize=8, symbolBrush='#14b8a6', symbolPen='darkred'
-                        )
-                    charts.accel_plot.current_points[1].setData([current_time], [charts.accel_y_data[point_idx]])
-                if len(charts.accel_z_data) > 0 and point_idx < len(charts.accel_z_data):
-                    if charts.accel_plot.current_points[2] is None:
-                        charts.accel_plot.current_points[2] = charts.accel_plot.plot(
-                            pen=None, symbol='o', symbolSize=8, symbolBrush='#f59e0b', symbolPen='darkred'
-                        )
-                    charts.accel_plot.current_points[2].setData([current_time], [charts.accel_z_data[point_idx]])
+                if enable_points:
+                    if len(charts.accel_x_data) > 0 and point_idx < len(charts.accel_x_data):
+                        if charts.accel_plot.current_points[0] is None:
+                            charts.accel_plot.current_points[0] = charts.accel_plot.plot(
+                                pen=None, symbol='o', symbolSize=8, symbolBrush='#8b5cf6', symbolPen='darkred'
+                            )
+                        charts.accel_plot.current_points[0].setData([current_time], [charts.accel_x_data[point_idx]])
+                    if len(charts.accel_y_data) > 0 and point_idx < len(charts.accel_y_data):
+                        if charts.accel_plot.current_points[1] is None:
+                            charts.accel_plot.current_points[1] = charts.accel_plot.plot(
+                                pen=None, symbol='o', symbolSize=8, symbolBrush='#14b8a6', symbolPen='darkred'
+                            )
+                        charts.accel_plot.current_points[1].setData([current_time], [charts.accel_y_data[point_idx]])
+                    if len(charts.accel_z_data) > 0 and point_idx < len(charts.accel_z_data):
+                        if charts.accel_plot.current_points[2] is None:
+                            charts.accel_plot.current_points[2] = charts.accel_plot.plot(
+                                pen=None, symbol='o', symbolSize=8, symbolBrush='#f59e0b', symbolPen='darkred'
+                            )
+                        charts.accel_plot.current_points[2].setData([current_time], [charts.accel_z_data[point_idx]])
             
             # Update Tire Temperatures plot - use all data
             if hasattr(charts, 'tire_temp_plot') and charts.tire_temp_plot:
-                if len(charts.tire_fl_data) > 0 and point_idx < len(charts.tire_fl_data):
-                    if charts.tire_temp_plot.current_points[0] is None:
-                        charts.tire_temp_plot.current_points[0] = charts.tire_temp_plot.plot(
-                            pen=None, symbol='o', symbolSize=8, symbolBrush='#ef4444', symbolPen='darkred'
-                        )
-                    charts.tire_temp_plot.current_points[0].setData([current_time], [charts.tire_fl_data[point_idx]])
-                if len(charts.tire_fr_data) > 0 and point_idx < len(charts.tire_fr_data):
-                    if charts.tire_temp_plot.current_points[1] is None:
-                        charts.tire_temp_plot.current_points[1] = charts.tire_temp_plot.plot(
-                            pen=None, symbol='o', symbolSize=8, symbolBrush='#f59e0b', symbolPen='darkred'
-                        )
-                    charts.tire_temp_plot.current_points[1].setData([current_time], [charts.tire_fr_data[point_idx]])
-                if len(charts.tire_rl_data) > 0 and point_idx < len(charts.tire_rl_data):
-                    if charts.tire_temp_plot.current_points[2] is None:
-                        charts.tire_temp_plot.current_points[2] = charts.tire_temp_plot.plot(
-                            pen=None, symbol='o', symbolSize=8, symbolBrush='#3b82f6', symbolPen='darkred'
-                        )
-                    charts.tire_temp_plot.current_points[2].setData([current_time], [charts.tire_rl_data[point_idx]])
-                if len(charts.tire_rr_data) > 0 and point_idx < len(charts.tire_rr_data):
-                    if charts.tire_temp_plot.current_points[3] is None:
-                        charts.tire_temp_plot.current_points[3] = charts.tire_temp_plot.plot(
-                            pen=None, symbol='o', symbolSize=8, symbolBrush='#22c55e', symbolPen='darkred'
-                        )
-                    charts.tire_temp_plot.current_points[3].setData([current_time], [charts.tire_rr_data[point_idx]])
+                if enable_points:
+                    if len(charts.tire_fl_data) > 0 and point_idx < len(charts.tire_fl_data):
+                        if charts.tire_temp_plot.current_points[0] is None:
+                            charts.tire_temp_plot.current_points[0] = charts.tire_temp_plot.plot(
+                                pen=None, symbol='o', symbolSize=8, symbolBrush='#ef4444', symbolPen='darkred'
+                            )
+                        charts.tire_temp_plot.current_points[0].setData([current_time], [charts.tire_fl_data[point_idx]])
+                    if len(charts.tire_fr_data) > 0 and point_idx < len(charts.tire_fr_data):
+                        if charts.tire_temp_plot.current_points[1] is None:
+                            charts.tire_temp_plot.current_points[1] = charts.tire_temp_plot.plot(
+                                pen=None, symbol='o', symbolSize=8, symbolBrush='#f59e0b', symbolPen='darkred'
+                            )
+                        charts.tire_temp_plot.current_points[1].setData([current_time], [charts.tire_fr_data[point_idx]])
+                    if len(charts.tire_rl_data) > 0 and point_idx < len(charts.tire_rl_data):
+                        if charts.tire_temp_plot.current_points[2] is None:
+                            charts.tire_temp_plot.current_points[2] = charts.tire_temp_plot.plot(
+                                pen=None, symbol='o', symbolSize=8, symbolBrush='#3b82f6', symbolPen='darkred'
+                            )
+                        charts.tire_temp_plot.current_points[2].setData([current_time], [charts.tire_rl_data[point_idx]])
+                    if len(charts.tire_rr_data) > 0 and point_idx < len(charts.tire_rr_data):
+                        if charts.tire_temp_plot.current_points[3] is None:
+                            charts.tire_temp_plot.current_points[3] = charts.tire_temp_plot.plot(
+                                pen=None, symbol='o', symbolSize=8, symbolBrush='#8b5cf6', symbolPen='darkred'
+                            )
+                        charts.tire_temp_plot.current_points[3].setData([current_time], [charts.tire_rr_data[point_idx]])
     
     def start_auto_replay(self):
         """Start automatic replay through all data points."""
@@ -775,29 +807,32 @@ class TemporalAnalysisWidget(QWidget):
         self.data_count += 1
         self.all_data.append(data)  # Store all data
         
-        # Update slider maximum - FORCER l'utilisation des données des graphiques
+        # Update slider maximum - utiliser self.all_data directement
         old_max = self.range_slider.maximum()
         
-        # TOUJOURS vérifier les données des graphiques après chaque mise à jour
-        if hasattr(self, 'parent_widget') and self.parent_widget and hasattr(self.parent_widget, 'charts') and self.parent_widget.charts.time_data:
-            max_points = len(self.parent_widget.charts.time_data)
-            if max_points > 0:  # Seulement si on a des données
-                self.range_slider.setMaximum(max_points - 1)
-        else:
-            # Fallback sur all_data seulement si pas de données dans les graphiques
-            max_points = len(self.all_data)
+        # Utiliser self.all_data pour le slider
+        max_points = len(self.all_data)
+        if max_points > 0:  # Seulement si on a des données
             self.range_slider.setMaximum(max_points - 1)
         
         # Check if we're in loading mode (skip auto-follow and point updates)
         is_loading = getattr(self, '_loading_data', False)
         
-        # Only set slider value if it was at the previous maximum (auto-follow mode)
+        # Only set slider value if it was at the previous maximum (auto-follow mode) - DISABLED for replay mode
+        # Skip auto-follow in replay mode to prevent crashes
         if not is_loading and (old_max == 0 or self.range_slider.value() == old_max):
-            self.range_slider.setValue(max_points - 1)  # Show latest point
+            # Check if we're in live mode before auto-following
+            is_live_mode = hasattr(self, 'parent_widget') and hasattr(self.parent_widget, 'acquisition_thread')
+            if is_live_mode:  # Only auto-follow in live mode
+                self.range_slider.setValue(max_points - 1)  # Show latest point
         
-        # Update all components with latest point if auto-following (skip during loading)
+        # Update all components with latest point if auto-following (skip during loading) - DISABLED for replay mode
+        # Skip auto-updates in replay mode to prevent crashes
         if not is_loading and self.range_slider.value() == max_points - 1:
-            self.update_all_components(max_points - 1)
+            # Check if we're in live mode (parent has acquisition_thread)
+            is_live_mode = hasattr(self, 'parent_widget') and hasattr(self.parent_widget, 'acquisition_thread')
+            if is_live_mode:  # Only auto-update in live mode
+                self.update_all_components(max_points - 1, enable_points=not is_live_mode)
         
         # Update data selector
         self.data_selector.update_count(self.data_count)
@@ -805,72 +840,42 @@ class TemporalAnalysisWidget(QWidget):
         # Emit sync signal
         self.data_sync_signal.emit(data)
     
-    def update_all_components(self, point_idx):
-        """Update all components with data up to specified point."""
-        # Utiliser les données des graphiques si disponibles, sinon self.all_data
-        if hasattr(self, 'parent_widget') and self.parent_widget and hasattr(self.parent_widget, 'charts') and self.parent_widget.charts.time_data:
-            max_points = len(self.parent_widget.charts.time_data)
-        else:
-            max_points = len(self.all_data)
+    def update_all_components(self, point_idx, enable_points=True):
+        """Update all components with data up to specified point.
+        
+        Args:
+            point_idx: Current point index
+            enable_points: Whether to create cursor points (True for replay, False for live)
+        """
+        # Utiliser self.all_data directement
+        max_points = len(self.all_data)
         
         if point_idx >= max_points:
             return
         
         # Update data selector display with current point info
-        if hasattr(self, 'parent_widget') and self.parent_widget and hasattr(self.parent_widget, 'charts') and self.parent_widget.charts.time_data:
-            max_time = int(self.parent_widget.charts.time_data[-1])
-            self.data_selector.info_label.setText(f"📈 Temps {point_idx}s / {max_time}s")
-        else:
-            self.data_selector.info_label.setText(f"📈 Point {point_idx + 1}/{max_points}")
+        self.data_selector.info_label.setText(f"📈 Point {point_idx + 1}/{max_points}")
         
         # Clear and update track map with all points up to current point
         self.track_map.clear_data()
         
-        # Utiliser les mêmes données que le curseur
-        if hasattr(self, 'parent_widget') and self.parent_widget and hasattr(self.parent_widget, 'charts') and self.parent_widget.charts.time_data:
-            # Utiliser les données des graphiques (synchronisées avec le curseur)
-            for i in range(point_idx + 1):
-                if i < len(self.parent_widget.charts.time_data):
-                    # Créer un objet TelemetryData avec les données du point i
-                    class TempPoint:
-                        def __init__(self, time_ms, speed, rpm, throttle, battery_temp, g_force_lat, g_force_long, g_force_vert):
-                            self.time_ms = time_ms
-                            self.speed = speed
-                            self.rpm = rpm
-                            self.throttle = throttle
-                            self.battery_temp = battery_temp
-                            self.g_force_lat = g_force_lat
-                            self.g_force_long = g_force_long
-                            self.g_force_vert = g_force_vert
-                    
-                    # Récupérer les données du point i depuis les graphiques
-                    time_ms = int(self.parent_widget.charts.time_data[i] * 1000) if i < len(self.parent_widget.charts.time_data) else 0
-                    speed = self.parent_widget.charts.speed_data[i] if i < len(self.parent_widget.charts.speed_data) else 0
-                    rpm = self.parent_widget.charts.rpm_data[i] * 100 if i < len(self.parent_widget.charts.rpm_data) else 0
-                    throttle = self.parent_widget.charts.throttle_data[i] if i < len(self.parent_widget.charts.throttle_data) else 0
-                    battery_temp = self.parent_widget.charts.battery_temp_data[i] if i < len(self.parent_widget.charts.battery_temp_data) else 0
-                    g_force_lat = self.parent_widget.charts.g_force_lat_data[i] if i < len(self.parent_widget.charts.g_force_lat_data) else 0
-                    g_force_long = self.parent_widget.charts.g_force_long_data[i] if i < len(self.parent_widget.charts.g_force_long_data) else 0
-                    g_force_vert = self.parent_widget.charts.g_force_vert_data[i] if i < len(self.parent_widget.charts.g_force_vert_data) else 0
-                    
-                    temp_point = TempPoint(time_ms, speed, rpm, throttle, battery_temp, g_force_lat, g_force_long, g_force_vert)
-                    self.track_map.update_data(temp_point)
-        else:
-            # Fallback sur all_data
-            for i in range(point_idx + 1):
+        # Utiliser self.all_data directement pour les graphiques de gauche
+        for i in range(point_idx + 1):
+            if i < len(self.all_data):
                 self.track_map.update_data(self.all_data[i])
         
         # Update spider chart with current point
-        current_data = self.all_data[point_idx]
-        if hasattr(current_data, 'g_force_lat'):
-            self.spider_chart.update_data(current_data)
+        if point_idx < len(self.all_data):
+            current_data = self.all_data[point_idx]
+            if hasattr(current_data, 'g_force_lat'):
+                self.spider_chart.update_data(current_data)
         
         # Update temporal graphs with all data and current point index
         self.temporal_graphs.update_data(self.all_data, point_idx)
         
         # Update TelemetryCharts if available (from replay/live pages)
         if hasattr(self, 'parent_widget') and self.parent_widget and hasattr(self.parent_widget, 'charts'):
-            self.data_selector.update_telemetry_charts(self.parent_widget.charts, point_idx)
+            self.data_selector.update_telemetry_charts(self.parent_widget.charts, point_idx, enable_points)
     
     def clear_data(self):
         """Clear all data."""
@@ -880,3 +885,5 @@ class TemporalAnalysisWidget(QWidget):
         self.data_count = 0
         self.all_data.clear()  # Clear stored data
         self.range_slider.setValue(0)
+        self.range_slider.setMaximum(0)  # Reset slider max
+        self.data_selector.info_label.setText("📈 0 points")  # Reset display

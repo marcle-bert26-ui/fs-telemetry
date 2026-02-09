@@ -177,13 +177,13 @@ class FileSelectorWidget(QWidget):
                 # Auto-select circuit_loop_data.csv if available, otherwise first file
                 if csv_files and not self.current_file:
                     if "circuit_loop_data.csv" in csv_files:
-                        self.on_file_selected("circuit_loop_data.csv")
+                        self.select_file("circuit_loop_data.csv")
                         # Set dropdown to show the selected file
                         index = self.file_dropdown.findText("circuit_loop_data.csv")
                         if index >= 0:
                             self.file_dropdown.setCurrentIndex(index)
                     else:
-                        self.on_file_selected(csv_files[0])
+                        self.select_file(csv_files[0])
                     
         except Exception as e:
             print(f"! Error refreshing file list: {e}")

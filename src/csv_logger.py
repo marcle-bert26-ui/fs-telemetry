@@ -30,13 +30,15 @@ class CSVLogger:
             self.filepath = self.filename  # Update filepath too
         
         # Create data_logs directory if it doesn't exist
-        os.makedirs(os.path.dirname(self.filename), exist_ok=True)
+        dirname = os.path.dirname(self.filename)
+        if dirname:  # Only create directory if dirname is not empty
+            os.makedirs(dirname, exist_ok=True)
         
         self.file_handle = open(self.filename, 'w', newline='', encoding='utf-8')
         self.csv_writer = csv.writer(self.file_handle)
         
         # Write header
-        from csv_parser import CSV_HEADER
+        from .csv_parser import CSV_HEADER
         self.csv_writer.writerow(CSV_HEADER)
         
         return self.filename
@@ -58,13 +60,13 @@ class CSVLogger:
                     data.acceleration_x,
                     data.acceleration_y,
                     data.acceleration_z,
+                    data.gps_latitude,
+                    data.gps_longitude,
+                    data.gps_altitude,
                     data.tire_temp_fl,
                     data.tire_temp_fr,
                     data.tire_temp_rl,
-                    data.tire_temp_rr,
-                    data.lap_time,
-                    data.sector_time,
-                    data.fuel_level
+                    data.tire_temp_rr
                 ]
                 self.csv_writer.writerow(row)
     

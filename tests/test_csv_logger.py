@@ -7,9 +7,10 @@ import pytest
 import csv
 from pathlib import Path
 from src.csv_logger import CSVLogger
-from src.csv_parser import TelemetryData
+from src.csv_parser import TelemetryData, CSV_HEADER
 import tempfile
 import shutil
+import time
 
 
 class TestCSVLogger:
@@ -79,10 +80,10 @@ class TestCSVLogger:
             
             # Read the file and check header
             with open(logger.filepath, 'r') as f:
-                reader = csv.reader(f, delimiter=';')
+                reader = csv.reader(f, delimiter=',')
                 header = next(reader)
             
-            assert header == config.CSV_HEADER
+            assert header == CSV_HEADER
         finally:
             config.LOG_DIRECTORY = original_dir
     
@@ -161,6 +162,9 @@ class TestCSVLogger:
             logger1.start_logging()
             filename1 = logger1.filepath
             logger1.close()
+            
+            # Small delay to ensure different timestamps
+            time.sleep(0.001)  # 1ms delay
             
             logger2 = CSVLogger()
             logger2.start_logging()
