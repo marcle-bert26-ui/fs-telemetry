@@ -14,6 +14,21 @@ from src.telemetry_manager import TelemetryManager
 from src.csv_parser import TelemetryData
 
 
+def create_telemetry_data(time_ms, speed, rpm, throttle, battery_temp, 
+                          g_force_lat=0.0, g_force_long=0.0, g_force_vert=1.0,
+                          acceleration_x=0.0, acceleration_y=0.0, acceleration_z=0.0,
+                          gps_latitude=48.8566, gps_longitude=2.3522, gps_altitude=100.0,
+                          tire_temp_fl=25.0, tire_temp_fr=25.0, tire_temp_rl=25.0, tire_temp_rr=25.0):
+    """Helper function to create TelemetryData with all parameters."""
+    return TelemetryData(
+        time_ms=time_ms, speed=speed, rpm=rpm, throttle=throttle, battery_temp=battery_temp,
+        g_force_lat=g_force_lat, g_force_long=g_force_long, g_force_vert=g_force_vert,
+        acceleration_x=acceleration_x, acceleration_y=acceleration_y, acceleration_z=acceleration_z,
+        gps_latitude=gps_latitude, gps_longitude=gps_longitude, gps_altitude=gps_altitude,
+        tire_temp_fl=tire_temp_fl, tire_temp_fr=tire_temp_fr, tire_temp_rl=tire_temp_rl, tire_temp_rr=tire_temp_rr
+    )
+
+
 class TestTelemetryManager:
     """Tests for TelemetryManager class"""
     
@@ -25,25 +40,12 @@ class TestTelemetryManager:
     @pytest.fixture
     def sample_data(self):
         """Create sample telemetry data"""
-        return TelemetryData(
+        return create_telemetry_data(
             time_ms=1000,
             speed=50.0,
             rpm=5000,
             throttle=75.0,
-            battery_temp=60.0,
-            g_force_lat=0.0,
-            g_force_long=0.0,
-            g_force_vert=1.0,
-            acceleration_x=0.0,
-            acceleration_y=0.0,
-            acceleration_z=0.0,
-            gps_latitude=0.0,
-            gps_longitude=0.0,
-            gps_altitude=0.0,
-            tire_temp_fl=0.0,
-            tire_temp_fr=0.0,
-            tire_temp_rl=0.0,
-            tire_temp_rr=0.0
+            battery_temp=60.0
         )
     
     def test_manager_initialization(self, manager):
@@ -63,25 +65,12 @@ class TestTelemetryManager:
     def test_multiple_updates(self, manager, sample_data):
         """Test updating with multiple data points"""
         for i in range(10):
-            data = TelemetryData(
+            data = create_telemetry_data(
                 time_ms=1000 + i*100,
                 speed=50.0 + i,
                 rpm=5000 + i*100,
                 throttle=75.0,
-                battery_temp=60.0 + i*0.5,
-                g_force_lat=0.0,
-                g_force_long=0.0,
-                g_force_vert=1.0,
-                acceleration_x=0.0,
-                acceleration_y=0.0,
-                acceleration_z=0.0,
-                gps_latitude=0.0,
-                gps_longitude=0.0,
-                gps_altitude=0.0,
-                tire_temp_fl=0.0,
-                tire_temp_fr=0.0,
-                tire_temp_rl=0.0,
-                tire_temp_rr=0.0
+                battery_temp=60.0 + i*0.5
             )
             manager.update(data)
         
@@ -100,66 +89,9 @@ class TestTelemetryManager:
     def test_get_history(self, manager):
         """Test getting history"""
         data_list = [
-            TelemetryData(
-                time_ms=1000,
-                speed=50.0,
-                rpm=5000,
-                throttle=75.0,
-                battery_temp=60.0,
-                g_force_lat=0.0,
-                g_force_long=0.0,
-                g_force_vert=1.0,
-                acceleration_x=0.0,
-                acceleration_y=0.0,
-                acceleration_z=0.0,
-                gps_latitude=0.0,
-                gps_longitude=0.0,
-                gps_altitude=0.0,
-                tire_temp_fl=0.0,
-                tire_temp_fr=0.0,
-                tire_temp_rl=0.0,
-                tire_temp_rr=0.0
-            ),
-            TelemetryData(
-                time_ms=2000,
-                speed=55.0,
-                rpm=5500,
-                throttle=80.0,
-                battery_temp=61.0,
-                g_force_lat=0.0,
-                g_force_long=0.0,
-                g_force_vert=1.0,
-                acceleration_x=0.0,
-                acceleration_y=0.0,
-                acceleration_z=0.0,
-                gps_latitude=0.0,
-                gps_longitude=0.0,
-                gps_altitude=0.0,
-                tire_temp_fl=0.0,
-                tire_temp_fr=0.0,
-                tire_temp_rl=0.0,
-                tire_temp_rr=0.0
-            ),
-            TelemetryData(
-                time_ms=3000,
-                speed=60.0,
-                rpm=6000,
-                throttle=85.0,
-                battery_temp=62.0,
-                g_force_lat=0.0,
-                g_force_long=0.0,
-                g_force_vert=1.0,
-                acceleration_x=0.0,
-                acceleration_y=0.0,
-                acceleration_z=0.0,
-                gps_latitude=0.0,
-                gps_longitude=0.0,
-                gps_altitude=0.0,
-                tire_temp_fl=0.0,
-                tire_temp_fr=0.0,
-                tire_temp_rl=0.0,
-                tire_temp_rr=0.0
-            )
+            create_telemetry_data(1000, 50.0, 5000, 75.0, 60.0),
+            create_telemetry_data(2000, 55.0, 5500, 80.0, 61.0),
+            create_telemetry_data(3000, 60.0, 6000, 85.0, 62.0)
         ]
         
         for data in data_list:
@@ -173,25 +105,12 @@ class TestTelemetryManager:
     def test_get_history_count(self, manager):
         """Test getting history count"""
         for i in range(10):
-            data = TelemetryData(
+            data = create_telemetry_data(
                 time_ms=i*100,
                 speed=50.0,
                 rpm=5000,
                 throttle=75.0,
-                battery_temp=60.0,
-                g_force_lat=0.0,
-                g_force_long=0.0,
-                g_force_vert=1.0,
-                acceleration_x=0.0,
-                acceleration_y=0.0,
-                acceleration_z=0.0,
-                gps_latitude=0.0,
-                gps_longitude=0.0,
-                gps_altitude=0.0,
-                tire_temp_fl=0.0,
-                tire_temp_fr=0.0,
-                tire_temp_rl=0.0,
-                tire_temp_rr=0.0
+                battery_temp=60.0
             )
             manager.update(data)
         
@@ -219,25 +138,12 @@ class TestTelemetryManager:
         temps = [55.0, 60.0, 65.0, 62.0, 58.0]
         
         for i, (speed, rpm, temp) in enumerate(zip(speeds, rpms, temps)):
-            data = TelemetryData(
+            data = create_telemetry_data(
                 time_ms=i*100,
                 speed=speed,
                 rpm=rpm,
                 throttle=50.0,
-                battery_temp=temp,
-                g_force_lat=0.0,
-                g_force_long=0.0,
-                g_force_vert=1.0,
-                acceleration_x=0.0,
-                acceleration_y=0.0,
-                acceleration_z=0.0,
-                gps_latitude=0.0,
-                gps_longitude=0.0,
-                gps_altitude=0.0,
-                tire_temp_fl=0.0,
-                tire_temp_fr=0.0,
-                tire_temp_rl=0.0,
-                tire_temp_rr=0.0
+                battery_temp=temp
             )
             manager.update(data)
         
@@ -264,25 +170,12 @@ class TestTelemetryManager:
     def test_clear_history(self, manager):
         """Test clearing history"""
         for i in range(5):
-            data = TelemetryData(
+            data = create_telemetry_data(
                 time_ms=i*100,
                 speed=50.0,
                 rpm=5000,
                 throttle=75.0,
-                battery_temp=60.0,
-                g_force_lat=0.0,
-                g_force_long=0.0,
-                g_force_vert=1.0,
-                acceleration_x=0.0,
-                acceleration_y=0.0,
-                acceleration_z=0.0,
-                gps_latitude=0.0,
-                gps_longitude=0.0,
-                gps_altitude=0.0,
-                tire_temp_fl=0.0,
-                tire_temp_fr=0.0,
-                tire_temp_rl=0.0,
-                tire_temp_rr=0.0
+                battery_temp=60.0
             )
             manager.update(data)
         

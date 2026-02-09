@@ -30,7 +30,9 @@ class CSVLogger:
             self.filepath = self.filename  # Update filepath too
         
         # Create data_logs directory if it doesn't exist
-        os.makedirs(os.path.dirname(self.filename), exist_ok=True)
+        dirname = os.path.dirname(self.filename)
+        if dirname:  # Only create directory if dirname is not empty
+            os.makedirs(dirname, exist_ok=True)
         
         self.file_handle = open(self.filename, 'w', newline='', encoding='utf-8')
         self.csv_writer = csv.writer(self.file_handle)
