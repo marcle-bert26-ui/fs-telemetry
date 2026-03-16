@@ -7,13 +7,13 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushBut
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from PyQt5.QtGui import QFont
 
-from .csv_source import CSVSource
-from .csv_parser import TelemetryData, parse_csv_line
-from .telemetry_manager import TelemetryManager
-from .telemetry_charts import TelemetryCharts
-from .temporal_analysis_widget import TemporalAnalysisWidget
-from .file_selector_widget import FileSelectorWidget
-from .replay_thread import ReplayThread
+from csv_source import CSVSource
+from csv_parser import TelemetryData, parse_csv_line
+from telemetry_manager import TelemetryManager
+from telemetry_charts import TelemetryCharts
+from temporal_analysis_widget import TemporalAnalysisWidget
+from file_selector_widget import FileSelectorWidget
+from replay_thread import ReplayThread
 
 
 class ReplayModeWidget(QWidget):
@@ -409,7 +409,7 @@ class ReplayModeWidget(QWidget):
     def load_all_data_for_charts(self, file_path):
         """Load all data from CSV file for initial chart display (curves only, no points)."""
         try:
-            from .csv_parser import TelemetryData, parse_csv_line
+            from csv_parser import TelemetryData, parse_csv_line
             import csv
             
             # Collect all data first
@@ -533,6 +533,12 @@ class ReplayModeWidget(QWidget):
                 self.max_rpm_label.setText(f"{stats.get('max_rpm', 0):.0f}")
                 self.avg_temp_label.setText(f"{stats.get('avg_temp', 0):.1f} °C")
                 self.data_count_label.setText(f"{stats.get('data_points', 0)} ")
+        
+        # Auto-zoom charts periodically during replay for better visibility
+        if isinstance(data_or_index, int):
+            # Auto-zoom every 50 data points to maintain good visibility during replay
+            if data_or_index % 50 == 0:
+                self.charts.full_auto_zoom()
     
     def on_error(self, error_msg):
         """Handle replay errors."""
@@ -547,20 +553,22 @@ class ReplayModeWidget(QWidget):
         if value >= len(self.charts.time_data):
             return
         
-        current_time = self.charts.time_data[value]
-        
-        # Remove only previous cursor markers (items with symbols)
-        for plot_name in ['speed_rpm_plot', 'throttle_temp_plot', 'g_force_plot', 'accel_plot']:
-            plot = getattr(self.charts, plot_name, None)
-            if plot:
-                items_to_remove = []
-                for item in plot.listDataItems():
-                    if hasattr(item, 'symbol') and item.symbol is not None:
-                        items_to_remove.append(item)
-                for item in items_to_remove:
-                    plot.removeItem(item)
-        
-        # Points are disabled - no cursor markers needed
+        # Get current data from temporal analysis
+        if hasattr(self.temporal_analysis, 'all_data') and self.temporal_analysis.all_data:
+            if value < len(self.temporal_analysis.all_data):
+                current_data = self.temporal_analysis.all_data[value]
+                # Update cursors using the proper function
+                self.update_chart_cursors(current_data, value)
+                
+                # Update labels with current data
+                if hasattr(current_data, "speed"):
+                    self.speed_label.setText(f"{current_data.speed:.1f} km/h")
+                    self.rpm_label.setText(f"{current_data.rpm:.0f}")
+                    self.throttle_label.setText(f"{current_data.throttle:.0f}%")
+                    self.temp_label.setText(f"{current_data.battery_temp:.1f}°C")
+                    self.g_lat_label.setText(f"{current_data.g_force_lat:.2f}g")
+                    self.g_long_label.setText(f"{current_data.g_force_long:.2f}g")
+                    self.g_vert_label.setText(f"{current_data.g_force_vert:.2f}g")
         # Skip point creation to avoid visual clutter and performance issues
         
         # Also call the temporal analysis update_telemetry_charts function
@@ -612,6 +620,80 @@ class ReplayModeWidget(QWidget):
     def on_status_changed(self, status):
         """Update status log."""
         self.log_text.append(f"- {status}")
+    
+    def update_chart_cursors(self, data, point_idx):
+        """Update cursor points on telemetry charts."""
+        try:
+            if hasattr(self, 'charts') and self.charts:
+                # Check if charts have data
+                if not hasattr(self.charts, 'time_data') or len(self.charts.time_data) == 0:
+                    return
+                
+                # Update cursor points for each chart (including fuel volume plot)
+                for plot in [self.charts.rpm_plot, self.charts.acceleration_plot, 
+                           self.charts.injection_plot, self.charts.fuel_flow_lh_plot, 
+                           self.charts.fuel_volume_plot]:
+                    # Create current_points if they don't exist
+                    if not hasattr(plot, 'current_points'):
+                        plot.current_points = [None]
+                    
+                    if plot.current_points:
+                        # Get current data value for this plot
+                        time_ms = getattr(data, 'time_ms', 0) / 1000.0
+                        
+                        # Update based on plot type
+                        if plot == self.charts.rpm_plot:
+                            value = getattr(data, 'rpm', 0)
+                        elif plot == self.charts.acceleration_plot:
+                            value = getattr(data, 'g_force_long', 0) * 9.81
+                        elif plot == self.charts.injection_plot:
+                            rpm = getattr(data, 'rpm', 0)
+                            throttle = getattr(data, 'throttle', 0)
+                            value = 800 + (rpm / 9500) * 6000 + throttle * 200
+                        elif plot == self.charts.fuel_flow_lh_plot:
+                            rpm = getattr(data, 'rpm', 0)
+                            throttle = getattr(data, 'throttle', 0)
+                            injection_us = 800 + (rpm / 9500) * 6000 + throttle * 200
+                            value = (injection_us / 1000000) * (rpm / 60) * 0.415 * 3600 / 1000
+                        elif plot == self.charts.fuel_volume_plot:
+                            # Calculate cumulative volume up to current point
+                            volume_total = 0
+                            for i in range(point_idx + 1):
+                                if i < len(self.charts.fuel_volume_data):
+                                    volume_total = self.charts.fuel_volume_data[i]
+                                else:
+                                    # Calculate missing volume if data not loaded
+                                    if i < len(self.temporal_analysis.all_data):
+                                        data_i = self.temporal_analysis.all_data[i]
+                                        rpm = getattr(data_i, 'rpm', 0)
+                                        throttle = getattr(data_i, 'throttle', 0)
+                                        injection_us = 800 + (rpm / 9500) * 6000 + throttle * 200 if rpm is not None and throttle is not None else 0
+                                        fuel_flow_lh = (injection_us / 1000000) * (rpm / 60) * 0.415 * 3600 / 1000 if rpm is not None else 0
+                                        volume_total += fuel_flow_lh / 3600  # Convert L/h to L/s
+                            value = volume_total
+                        else:
+                            value = 0
+                        
+                        # Update cursor point
+                        if hasattr(plot, 'curves') and len(plot.curves) > 0:
+                            # Remove old cursor point if exists
+                            if plot.current_points[0] is not None:
+                                plot.current_points[0].clear()
+                            
+                            # Create new cursor point
+                            import pyqtgraph as pg
+                            color = plot.curves[0].opts['pen'].color().name()
+                            cursor_point = plot.plot([time_ms], [value], 
+                                                    pen=None, 
+                                                    symbol='o', 
+                                                    symbolBrush=color, 
+                                                    symbolSize=8, 
+                                                    symbolPen=pg.mkPen(color='white', width=2))
+                            plot.current_points[0] = cursor_point
+                            
+        except Exception as e:
+            # Silently ignore cursor errors to not break main functionality
+            pass
     
     def on_replay_finished(self):
         """Handle replay completion."""

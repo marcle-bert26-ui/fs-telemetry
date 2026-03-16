@@ -9,8 +9,8 @@ from PyQt5.QtGui import QFont
 import pyqtgraph as pg
 import numpy as np
 
-from .spider_charts import GForcesSpiderWidget
-from .csv_parser import TelemetryData
+from spider_charts import GForcesSpiderWidget
+from csv_parser import TelemetryData
 
 
 class CompactTrackMap(QWidget):
@@ -94,41 +94,59 @@ class CompactTrackMap(QWidget):
         """)
         layout.addWidget(self.info_label)
     
-    def update_data(self, data):
-        """Update car position on track."""
+    def update_data(self, data, replay_mode=False):
+        """Update car position on track - optimized for live mode, compatible with replay mode."""
         if not data:
             return
 
         if not (hasattr(data, 'gps_latitude') and hasattr(data, 'gps_longitude')):
             self.info_label.setText("📍 No GPS | -- km/h")
-            self.position_changed.emit(data)
+            if not replay_mode:  # Only emit signal in live mode
+                self.position_changed.emit(data)
             return
 
         lat = data.gps_latitude
         lon = data.gps_longitude
 
+        # Only set origin once, not on every update
         if self.origin_lat is None or self.origin_lon is None:
             self.origin_lat = lat
             self.origin_lon = lon
+            # Cache meters per degree calculation
+            self._meters_per_deg_lat = 111_320.0
+            self._meters_per_deg_lon = 111_320.0 * float(np.cos(np.deg2rad(self.origin_lat)))
+        else:
+            # Don't reset origin if it's already set and close to current position
+            lat_diff = abs(lat - self.origin_lat)
+            lon_diff = abs(lon - self.origin_lon)
+            if lat_diff > 0.01 or lon_diff > 0.01:  # Only reset if position changed significantly
+                self.origin_lat = lat
+                self.origin_lon = lon
+                self.trail_points = []  # Clear trail when origin changes
+                # Recache meters per degree
+                self._meters_per_deg_lon = 111_320.0 * float(np.cos(np.deg2rad(self.origin_lat)))
 
-        meters_per_deg_lat = 111_320.0
-        meters_per_deg_lon = 111_320.0 * float(np.cos(np.deg2rad(self.origin_lat)))
+        # Calculate position using cached values
+        x = (lon - self.origin_lon) * self._meters_per_deg_lon
+        y = (lat - self.origin_lat) * self._meters_per_deg_lat
 
-        x = (lon - self.origin_lon) * meters_per_deg_lon
-        y = (lat - self.origin_lat) * meters_per_deg_lat
-
+        # Update car position only
         self.car_position.setData([x], [y])
 
+        # Update trail (limit points for performance)
         self.trail_points.append((x, y))
-        if len(self.trail_points) > 2000:
-            self.trail_points = self.trail_points[-2000:]
+        
+        # In replay mode, keep more points for complete trail visualization
+        max_points = 100 if not replay_mode else 2000  # Much larger buffer for replay
+        if len(self.trail_points) > max_points:
+            self.trail_points = self.trail_points[-max_points:]
 
+        # Always update trail line if we have more than 1 point (remove the counter for live mode)
         if len(self.trail_points) > 1:
             trail_x, trail_y = zip(*self.trail_points)
             self.trail.setData(trail_x, trail_y)
 
-            min_x = min(trail_x)
-            max_x = max(trail_x)
+        # Update info label
         speed = getattr(data, 'speed', None)
         if speed is None:
             self.info_label.setText(f"📍 ({x:.0f}, {y:.0f}) m | -- km/h")
@@ -136,10 +154,31 @@ class CompactTrackMap(QWidget):
             self.info_label.setText(f"📍 ({x:.0f}, {y:.0f}) m | {speed:.0f} km/h")
         
         # Emit signal
-        self.position_changed.emit(data)
+        if not replay_mode:  # Only emit signal in live mode
+            self.position_changed.emit(data)
         
-        # Enable auto-range for continuous zoom like other charts
-        self.enableAutoRange()
+        # Auto-range in replay mode for better visibility
+        if replay_mode and len(self.trail_points) > 1:
+            # Force auto-range in replay mode for better track visualization
+            trail_x, trail_y = zip(*self.trail_points)
+            min_x, max_x = min(trail_x), max(trail_x)
+            min_y, max_y = min(trail_y), max(trail_y)
+            
+            # Ajouter une marge de 10%
+            x_margin = (max_x - min_x) * 0.1 if max_x != min_x else 10
+            y_margin = (max_y - min_y) * 0.1 if max_y != min_y else 10
+            
+            self.plot.setRange(xRange=[min_x - x_margin, max_x + x_margin], 
+                             yRange=[min_y - y_margin, max_y + y_margin])
+        
+        # Only auto-range in live mode (replay mode handles zoom differently)
+        if not replay_mode:
+            # Auto-range more frequently for better live experience
+            if not hasattr(self, '_auto_range_counter'):
+                self._auto_range_counter = 0
+            self._auto_range_counter += 1
+            if self._auto_range_counter % 3 == 0:  # Every 3rd update (more frequent)
+                self.plot.enableAutoRange()
     
     def clear_data(self):
         """Clear track data."""
@@ -640,20 +679,20 @@ class TemporalAnalysisWidget(QWidget):
         self.data_selector = CompactDataSelector(self.range_slider)
         self.data_selector.parent_widget = self  # Set reference to parent
         
-        # Ajouter un affichage des données actuelles
-        self.current_data_label = QLabel("📊 Données Actuelles")
-        self.current_data_label.setStyleSheet("""
-            QLabel {
-                background-color: #f8fafc;
-                border: 2px solid #64748b;
-                border-radius: 6px;
-                padding: 8px;
-                font-family: 'Courier New', monospace;
-                font-size: 10px;
-                color: #1e293b;
-            }
-        """)
-        self.current_data_label.setWordWrap(True)
+        # Ajouter un affichage des données actuelles - COMMENTÉ
+        # self.current_data_label = QLabel("📊 Données Actuelles")
+        # self.current_data_label.setStyleSheet("""
+        #     QLabel {
+        #         background-color: #f8fafc;
+        #         border: 2px solid #64748b;
+        #         border-radius: 6px;
+        #         padding: 8px;
+        #         font-family: 'Courier New', monospace;
+        #         font-size: 10px;
+        #         color: #1e293b;
+        #     }
+        # """)
+        # self.current_data_label.setWordWrap(True)
         
         # Titre principal
         title = QLabel("📊 Analyse Temporelle Complète")
@@ -765,7 +804,7 @@ class TemporalAnalysisWidget(QWidget):
         main_layout.addStretch()  # Espace flexible en bas
         
         layout.addLayout(main_layout)
-        layout.addWidget(self.current_data_label)  # Données actuelles
+        # layout.addWidget(self.current_data_label)  # Données actuelles - COMMENTÉ
         layout.addWidget(self.range_slider)  # Curseur en bas
         
         # Connect signals
@@ -782,22 +821,22 @@ class TemporalAnalysisWidget(QWidget):
         
         self.range_slider.valueChanged.connect(update_spider_from_slider)
         
-        # Connecter le curseur aux données actuelles
-        def update_current_data_display(value):
-            if value < len(self.all_data):
-                data = self.all_data[value]
-                text = f"""📊 Données Actuelles (Point {value + 1})
-⏱️ Temps: {getattr(data, 'time_ms', 0) / 1000:.1f}s
-🏎️ Vitesse: {getattr(data, 'speed', 0):.1f} km/h
-🔧 RPM: {getattr(data, 'rpm', 0):.0f}
-🚦 Accélérateur: {getattr(data, 'throttle', 0):.1f}%
-🌡️ Température: {getattr(data, 'battery_temp', 0):.1f}°C
-➡️ G-Latéral: {getattr(data, 'g_force_lat', 0):.3f}g
-⬇️ G-Longitudinal: {getattr(data, 'g_force_long', 0):.3f}g
-⬆️ G-Vertical: {getattr(data, 'g_force_vert', 0):.3f}g"""
-                self.current_data_label.setText(text)
+        # Connecter le curseur aux données actuelles - COMMENTÉ
+        # def update_current_data_display(value):
+        #     if value < len(self.all_data):
+        #         data = self.all_data[value]
+        #         text = f"""📊 Données Actuelles (Point {value + 1})
+        # ⏱️ Temps: {getattr(data, 'time_ms', 0) / 1000:.1f}s
+        # 🏎️ Vitesse: {getattr(data, 'speed', 0):.1f} km/h
+        # 🔧 RPM: {getattr(data, 'rpm', 0):.0f}
+        # 🚦 Accélérateur: {getattr(data, 'throttle', 0):.1f}%
+        # 🌡️ Température: {getattr(data, 'battery_temp', 0):.1f}°C
+        # ➡️ G-Latéral: {getattr(data, 'g_force_lat', 0):.3f}g
+        # ⬇️ G-Longitudinal: {getattr(data, 'g_force_long', 0):.3f}g
+        # ⬆️ G-Vertical: {getattr(data, 'g_force_vert', 0):.3f}g"""
+        #         self.current_data_label.setText(text)
         
-        self.range_slider.valueChanged.connect(update_current_data_display)
+        # self.range_slider.valueChanged.connect(update_current_data_display)
     
     def update_data(self, data):
         """Update all components."""
@@ -862,13 +901,18 @@ class TemporalAnalysisWidget(QWidget):
         # Utiliser self.all_data directement pour les graphiques de gauche
         for i in range(point_idx + 1):
             if i < len(self.all_data):
-                self.track_map.update_data(self.all_data[i])
+                self.track_map.update_data(self.all_data[i], replay_mode=True)
         
         # Update spider chart with current point
         if point_idx < len(self.all_data):
             current_data = self.all_data[point_idx]
             if hasattr(current_data, 'g_force_lat'):
                 self.spider_chart.update_data(current_data)
+            
+            # Emit signal for charts cursor update
+            if hasattr(self, 'parent_widget') and self.parent_widget:
+                # Send current data to parent for chart cursor update
+                self.parent_widget.update_chart_cursors(current_data, point_idx)
         
         # Update temporal graphs with all data and current point index
         self.temporal_graphs.update_data(self.all_data, point_idx)

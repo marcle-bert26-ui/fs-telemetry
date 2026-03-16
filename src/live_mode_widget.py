@@ -2,18 +2,19 @@
 Live Mode Widget - Interface for real-time Arduino data acquisition.
 """
 
-from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-                             QLineEdit, QSpinBox, QGridLayout, QGroupBox, QTextEdit, QTabWidget, QScrollArea)
-from PyQt5.QtCore import Qt, QThread, pyqtSignal
+from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, 
+                           QLabel, QPushButton, QTextEdit, QGroupBox, QScrollArea,
+                           QLineEdit, QMessageBox, QSplitter, QSizePolicy, QSpinBox, QTabWidget)
+from PyQt5.QtCore import QTimer, Qt, pyqtSignal, QObject, QThread
 from PyQt5.QtGui import QFont, QColor
 import os
 
-from .serial_source import SerialSource
-from .csv_parser import parse_csv_line
-from .telemetry_manager import TelemetryManager
-from .csv_logger import CSVLogger
-from .telemetry_charts import TelemetryCharts
-from .temporal_analysis_widget import TemporalAnalysisWidget, CompactTrackMap
+from serial_source import SerialSource
+from csv_parser import parse_csv_line
+from telemetry_manager import TelemetryManager
+from csv_logger import CSVLogger
+from telemetry_charts import TelemetryCharts
+from temporal_analysis_widget import TemporalAnalysisWidget, CompactTrackMap
 import app_config as config
 
 
@@ -108,14 +109,24 @@ class LiveModeWidget(QWidget):
         
         # Performance optimization settings
         self.update_counter = 0
-        self.batch_size = 10  # Update charts every 10 data points (increased from 5)
         self.stats_update_counter = 0
-        self.stats_batch_size = 20  # Update stats every 20 data points (increased from 10)
+        self.chart_batch_size = 5  # Update charts every 5 data points
+        self.stats_batch_size = 30  # Update stats every 30 data points (much less frequent)
         self.is_stopping = False  # Flag to prevent crashes during stop
+        self.is_live_mode = True   # Flag to identify live mode for optimizations
+        
+        # Add timer for chart updates to control frequency
+        self.chart_timer = QTimer()
+        self.chart_timer.timeout.connect(self.update_charts_from_buffer)
+        self.chart_timer.start(200)  # Update charts every 200ms (5 FPS - even more stable)
+        self.pending_data = None
         
         # Set parent references for track map access
         self.charts.parent_widget = self
         self.temporal_analysis.parent_widget = self
+        
+        # Enable batch mode for charts optimization
+        self.charts._batch_mode = False  # Disable batch mode for real-time updates
         
         self.init_ui()
     
@@ -255,19 +266,19 @@ class LiveModeWidget(QWidget):
         self.rpm_label.setStyleSheet("color: #1e3a8a; background: #f0f9ff; padding: 6px; border-radius: 4px; min-width: 100px;")
         data_layout.addWidget(self.rpm_label, 0, 3)
         
-        # Throttle (plus petit)
-        data_layout.addWidget(QLabel("Throttle:"), 1, 0)
-        self.throttle_label = QLabel("--%")
-        self.throttle_label.setFont(QFont("Arial", 14, QFont.Bold))
-        self.throttle_label.setStyleSheet("color: #1e3a8a; background: #f0f9ff; padding: 6px; border-radius: 4px; min-width: 100px;")
-        data_layout.addWidget(self.throttle_label, 1, 1)
+        # Acceleration (plus petit)
+        data_layout.addWidget(QLabel("Accel:"), 1, 0)
+        self.accel_label = QLabel("-- m/s²")
+        self.accel_label.setFont(QFont("Arial", 14, QFont.Bold))
+        self.accel_label.setStyleSheet("color: #1e3a8a; background: #f0f9ff; padding: 6px; border-radius: 4px; min-width: 100px;")
+        data_layout.addWidget(self.accel_label, 1, 1)
         
-        # Temperature (plus petit)
-        data_layout.addWidget(QLabel("Temp:"), 1, 2)
-        self.temp_label = QLabel("--°C")
-        self.temp_label.setFont(QFont("Arial", 14, QFont.Bold))
-        self.temp_label.setStyleSheet("color: #1e3a8a; background: #f0f9ff; padding: 6px; border-radius: 4px; min-width: 100px;")
-        data_layout.addWidget(self.temp_label, 1, 3)
+        # Injection (plus petit)
+        data_layout.addWidget(QLabel("Inject:"), 1, 2)
+        self.injection_label = QLabel("-- µs")
+        self.injection_label.setFont(QFont("Arial", 14, QFont.Bold))
+        self.injection_label.setStyleSheet("color: #1e3a8a; background: #f0f9ff; padding: 6px; border-radius: 4px; min-width: 100px;")
+        data_layout.addWidget(self.injection_label, 1, 3)
         
         data_group.setLayout(data_layout)
         left_layout.addWidget(data_group)
@@ -293,14 +304,14 @@ class LiveModeWidget(QWidget):
         stats_layout = QGridLayout()
         stats_layout.setSpacing(6)  # Plus compact
         
-        stats_layout.addWidget(QLabel("Max Speed:"), 0, 0)
-        self.max_speed_label = QLabel("--")
+        stats_layout.addWidget(QLabel("Fuel Flow:"), 0, 0)
+        self.max_speed_label = QLabel("-- L/h")
         self.max_speed_label.setFont(QFont("Arial", 11, QFont.Bold))
         self.max_speed_label.setStyleSheet("color: #10b981; background: #f0fdf4; padding: 4px; border-radius: 3px;")
         stats_layout.addWidget(self.max_speed_label, 0, 1)
         
-        stats_layout.addWidget(QLabel("Avg Speed:"), 0, 2)
-        self.avg_speed_label = QLabel("--")
+        stats_layout.addWidget(QLabel("Fuel Total:"), 0, 2)
+        self.avg_speed_label = QLabel("-- L")
         self.avg_speed_label.setFont(QFont("Arial", 11, QFont.Bold))
         self.avg_speed_label.setStyleSheet("color: #10b981; background: #f0fdf4; padding: 4px; border-radius: 3px;")
         stats_layout.addWidget(self.avg_speed_label, 0, 3)
@@ -393,10 +404,10 @@ class LiveModeWidget(QWidget):
         # Reset displays only
         self.speed_label.setText("-- km/h")
         self.rpm_label.setText("--")
-        self.throttle_label.setText("--%")
-        self.temp_label.setText("--°C")
-        self.max_speed_label.setText("--")
-        self.avg_speed_label.setText("--")
+        self.accel_label.setText("-- m/s²")
+        self.injection_label.setText("-- µs")
+        self.max_speed_label.setText("-- L/h")
+        self.avg_speed_label.setText("-- L")
         self.data_count_label.setText("0")
         
         # Reset performance counters
@@ -451,10 +462,10 @@ class LiveModeWidget(QWidget):
             # Reset all displays to 0
             self.speed_label.setText("-- km/h")
             self.rpm_label.setText("--")
-            self.throttle_label.setText("--%")
-            self.temp_label.setText("--°C")
-            self.max_speed_label.setText("--")
-            self.avg_speed_label.setText("--")
+            self.accel_label.setText("-- m/s²")
+            self.injection_label.setText("-- µs")
+            self.max_speed_label.setText("-- L/h")
+            self.avg_speed_label.setText("-- L")
             self.data_count_label.setText("0")
             
             # Reset performance counters
@@ -481,7 +492,7 @@ class LiveModeWidget(QWidget):
         self.is_stopping = False
     
     def on_data_received(self, data):
-        """Update GUI with received data - optimized for performance with crash protection."""
+        """Update GUI with received data - ultra-optimized for smooth performance."""
         # Skip updates if stopping to prevent crashes
         if self.is_stopping:
             return
@@ -492,47 +503,68 @@ class LiveModeWidget(QWidget):
                 # Always update labels (fast operation)
                 self.speed_label.setText(f"{data.speed:.1f} km/h")
                 self.rpm_label.setText(f"{data.rpm:.0f}")
-                self.throttle_label.setText(f"{data.throttle:.0f}%")
-                self.temp_label.setText(f"{data.battery_temp:.1f}°C")
                 
-                # Update charts in batches to improve performance
-                self.update_counter += 1
-                if self.update_counter >= self.batch_size:
-                    # Update all components in batch
-                    self.charts.update_data(data)
-                    self.temporal_analysis.update_data(data)
-                    self.track_map.update_data(data)
-                    self.update_counter = 0
-                else:
-                    # Only update main charts for intermediate updates (skip heavy components)
-                    try:
-                        self.charts.update_data(data)
-                    except Exception:
-                        pass  # Skip chart update if it fails to prevent crashes
+                # Calculate and display fuel data
+                acceleration = data.g_force_long * 9.81 if data.g_force_long is not None else 0
+                self.accel_label.setText(f"{acceleration:.2f} m/s²")
+                
+                # Calculate injection
+                injection_us = 800 + (data.rpm / 9500) * 6000 + data.throttle * 200 if data.rpm is not None and data.throttle is not None else 0
+                self.injection_label.setText(f"{injection_us:.0f} µs")
+                
+                # Calculate fuel flow
+                fuel_flow_lh = (injection_us / 1000000) * (data.rpm / 60) * 0.415 * 3600 / 1000 if data.rpm is not None else 0
+                
+                # Store data for timer-based chart updates
+                self.pending_data = data
+                
+                # Update stats much less frequently
+                self.stats_update_counter += 1
+                if self.stats_update_counter >= self.stats_batch_size:
+                    # Get current fuel volume from charts
+                    current_fuel_volume = 0
+                    if hasattr(self.charts, 'fuel_volume_data') and len(self.charts.fuel_volume_data) > 0:
+                        current_fuel_volume = self.charts.fuel_volume_data[-1]
+                    
+                    # Update stats with correct data
+                    self.max_speed_label.setText(f"{fuel_flow_lh:.2f} L/h")  # Current fuel flow
+                    self.avg_speed_label.setText(f"{current_fuel_volume:.3f} L")  # Total fuel volume
+                    self.data_count_label.setText(f"{len(self.manager.get_history())}")
+                    self.stats_update_counter = 0
                     
             else:  # Dict object (backward compatibility)
                 self.speed_label.setText(f"{data['speed']:.1f} km/h")
                 self.rpm_label.setText(f"{data['rpm']:.0f}")
                 self.throttle_label.setText(f"{data['throttle']:.0f}%")
                 self.temp_label.setText(f"{data['battery_temp']:.1f}°C")
-            
-            # Update statistics less frequently (expensive operation)
-            self.stats_update_counter += 1
-            if self.stats_update_counter >= self.stats_batch_size:
-                try:
-                    stats = self.acquisition_thread.manager.get_stats()
-                    if stats:
-                        self.max_speed_label.setText(f"{stats.get('max_speed', 0):.1f} km/h")
-                        self.avg_speed_label.setText(f"{stats.get('avg_speed', 0):.1f} km/h")
-                        self.data_count_label.setText(f"{stats.get('data_points', 0)}")
-                except Exception:
-                    pass  # Skip stats update if it fails
-                self.stats_update_counter = 0
                 
         except Exception as e:
             # Log error but don't crash
             if hasattr(self, 'log_text'):
                 self.log_text.append(f"⚠️ Update error: {str(e)[:50]}...")
+    
+    def update_charts_from_buffer(self):
+        """Update charts from pending data - called by timer for smooth updates."""
+        if self.pending_data and not self.is_stopping:
+            try:
+                # Update charts immediately (highest priority)
+                self.charts.update_data(self.pending_data)
+                
+                # Update track map at maximum speed (same as charts) - every timer call
+                if hasattr(self, 'map_update_counter'):
+                    self.map_update_counter += 1
+                else:
+                    self.map_update_counter = 1
+                
+                # Update every timer call to achieve 5 FPS (same as charts)
+                if self.map_update_counter % 1 == 0:  # Every call = 5 FPS
+                    if hasattr(self, 'track_map') and self.track_map:
+                        self.track_map.update_data(self.pending_data)
+                    
+            except Exception as e:
+                # Ignore chart errors to prevent crashes, but log them
+                if hasattr(self, 'log_text'):
+                    self.log_text.append(f"⚠️ Chart update error: {str(e)[:30]}...")
     
     def on_error(self, error_msg):
         """Handle acquisition errors."""
@@ -542,3 +574,81 @@ class LiveModeWidget(QWidget):
     def on_status_changed(self, status):
         """Update status log."""
         self.log_text.append(f"- {status}")
+    
+    def update_chart_cursors(self, data, point_idx):
+        """Update cursor points on telemetry charts - optimized for live mode."""
+        try:
+            if hasattr(self, 'charts') and self.charts:
+                # Check if charts have data
+                if not hasattr(self.charts, 'time_data') or len(self.charts.time_data) == 0:
+                    return
+                
+                # Skip cursor updates in live mode for better performance
+                # Only update if explicitly requested or in replay mode
+                if hasattr(self, 'is_live_mode') and self.is_live_mode:
+                    return  # Skip cursor updates in live mode for smoothness
+                
+                # Update cursor points for each chart
+                for plot in [self.charts.rpm_plot, self.charts.acceleration_plot, 
+                           self.charts.injection_plot, self.charts.fuel_flow_lh_plot, 
+                           self.charts.fuel_volume_plot]:
+                    # Create current_points if they don't exist
+                    if not hasattr(plot, 'current_points'):
+                        plot.current_points = [None]
+                    
+                    if plot.current_points:
+                        # Get current data value for this plot
+                        time_ms = getattr(data, 'time_ms', 0) / 1000.0
+                        
+                        # Update based on plot type
+                        if plot == self.charts.rpm_plot:
+                            value = getattr(data, 'rpm', 0)
+                        elif plot == self.charts.acceleration_plot:
+                            value = getattr(data, 'g_force_long', 0) * 9.81
+                        elif plot == self.charts.injection_plot:
+                            rpm = getattr(data, 'rpm', 0)
+                            throttle = getattr(data, 'throttle', 0)
+                            value = 800 + (rpm / 9500) * 6000 + throttle * 200
+                        elif plot == self.charts.fuel_flow_lh_plot:
+                            rpm = getattr(data, 'rpm', 0)
+                            throttle = getattr(data, 'throttle', 0)
+                            injection_us = 800 + (rpm / 9500) * 6000 + throttle * 200
+                            value = (injection_us / 1000000) * (rpm / 60) * 0.415 * 3600 / 1000
+                        elif plot == self.charts.fuel_volume_plot:
+                            # Calculate current volume directly from current data
+                            rpm = getattr(data, 'rpm', 0)
+                            throttle = getattr(data, 'throttle', 0)
+                            injection_us = 800 + (rpm / 9500) * 6000 + throttle * 200
+                            fuel_flow_lh = (injection_us / 1000000) * (rpm / 60) * 0.415 * 3600 / 1000
+                            
+                            # Use the latest cumulative volume if available, otherwise calculate
+                            if len(self.charts.fuel_volume_data) > 0:
+                                # Add current fuel flow to the last cumulative volume
+                                last_volume = self.charts.fuel_volume_data[-1]
+                                value = last_volume + fuel_flow_lh / 3600  # Convert L/h to L/s for this instant
+                            else:
+                                # Fallback to simple calculation
+                                value = fuel_flow_lh * point_idx / 3600
+                        else:
+                            value = 0
+                        
+                        # Update cursor point
+                        if hasattr(plot, 'curves') and len(plot.curves) > 0:
+                            # Remove old cursor point if exists
+                            if plot.current_points[0] is not None:
+                                plot.current_points[0].clear()
+                            
+                            # Create new cursor point
+                            import pyqtgraph as pg
+                            color = plot.curves[0].opts['pen'].color().name()
+                            cursor_point = plot.plot([time_ms], [value], 
+                                                    pen=None, 
+                                                    symbol='o', 
+                                                    symbolBrush=color, 
+                                                    symbolSize=8, 
+                                                    symbolPen=pg.mkPen(color='white', width=2))
+                            plot.current_points[0] = cursor_point
+                            
+        except Exception as e:
+            # Silently ignore cursor errors to not break main functionality
+            pass

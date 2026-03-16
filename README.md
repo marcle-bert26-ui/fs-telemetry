@@ -1,6 +1,6 @@
 # EIGSI Formula Student Telemetry System
 
-🏎️ **Advanced real-time telemetry data acquisition and analysis application for EIGSI Formula Student vehicles with GPS tracking, G-force visualization, and circuit mapping.**
+🏎️ **Advanced real-time telemetry data acquisition and analysis application for EIGSI Formula Student vehicles with fuel consumption monitoring, GPS tracking, G-force visualization, and circuit mapping.**
 
 [![Tests](https://github.com/marcle-bert26-ui/fs-telemetry/actions/workflows/tests.yml/badge.svg)](https://github.com/marcle-bert26-ui/fs-telemetry/actions/workflows/tests.yml)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
@@ -44,22 +44,25 @@ py main.py         # CLI mode (console output)
 - **Real-time data acquisition** from Arduino/serial sources
 - **CSV data replay** with full temporal analysis
 - **Multi-parameter monitoring**: Speed, RPM, Throttle, Temperature, G-forces
+- **Fuel consumption analysis**: Injection timing, fuel flow rate, cumulative volume
 - **GPS tracking** with circuit mapping
 - **Data logging** to CSV files
 
 ### 📊 Visualization
-- **Interactive temporal graphs** with cursor synchronization
+- **Interactive fuel charts**: RPM, acceleration, injection, fuel flow, volume
+- **Synchronized cursor system** across all visualizations
 - **Spider chart** for G-force analysis
 - **Track map** with real-time position tracking
 - **Real-time charts** with auto-zoom capabilities
-- **Current data display** with live updates
+- **Current data display** with live fuel metrics
 
 ### 🎮 User Interface
 - **Unified widget layout** with vertical organization
-- **Synchronized cursor** across all visualizations
+- **Synchronized cursor** across all visualizations including fuel charts
 - **Auto-zoom controls** (2-minute window, full auto)
 - **Responsive design** with 50/50 layout split
 - **Dark theme** with modern styling
+- **Clean interface** without redundant data displays
 
 ### ⚡ Performance Optimizations
 - **Live mode optimization**: Batch updates (10x performance gain)
@@ -75,7 +78,7 @@ py main.py         # CLI mode (console output)
 fs-telemetry/
 ├── src/                    # Source code
 │   ├── temporal_analysis_widget.py    # Main analysis widget
-│   ├── telemetry_charts.py            # Real-time charts
+│   ├── telemetry_charts.py            # Real-time fuel charts
 │   ├── spider_charts.py               # G-force spider chart
 │   ├── replay_mode_widget.py          # Replay interface
 │   ├── live_mode_widget.py            # Live acquisition
@@ -461,7 +464,8 @@ time_ms;speed_kmh;rpm;throttle;battery_temp;g_force_lat;g_force_long;g_force_ver
 - **TrackMapWidget** - Interactive GPS visualization
 - **SpiderChartWidget** - G-force radar charts  
 - **TemporalAnalysisWidget** - Time-based data exploration
-- **TelemetryCharts** - Real-time multi-parameter graphs
+- **TelemetryCharts** - Real-time fuel consumption graphs
+- **FuelTrackerCharts** - Advanced fuel monitoring system
 
 ### 🔧 **Modular Design**
 - **Acquisition** → Serial/CSV data sources
@@ -485,35 +489,61 @@ time_ms;speed_kmh;rpm;throttle;battery_temp;g_force_lat;g_force_long;g_force_ver
 
 ---
 
-## 🚀 **What's New in v2.2**
+## 🚀 **What's New in v2.4**
 
-### ⚡ **Performance & Stability**
-- **Live mode optimization**: 10x performance improvement with batch updates
-- **Replay mode stability**: Instant CSV loading, no auto-scrolling crashes
-- **Memory management**: Smart circular buffers and efficient data handling
-- **Thread safety**: Enhanced crash protection with timeout handling
-- **Cursor management**: Smart cursor points (replay only, disabled in live mode)
+### ⚡ **Performance Optimizations**
+- **Ultra-fast live mode**: Map updated at 5 FPS (same as charts)
+- **Optimized data buffers**: Reduced memory usage while maintaining performance
+- **Smart update scheduling**: Charts (5 FPS), Map (5 FPS), Stats (rare updates)
+- **Responsive interface**: No more lag or saccades in live mode
 
-### 🎨 **UI/UX Enhancements**
-- **Auto-zoom improvements**: Better zoom behavior in live mode
-- **Track map integration**: Added to live mode with continuous zoom
-- **Point management**: Clean interface without visual clutter
-- **Button states**: Proper Play/Stop button management
-- **Error handling**: Graceful error recovery without crashes
+### 🗺️ **Enhanced Track Map**
+- **Real-time GPS tracking**: Position updates every 200ms
+- **Adaptive buffer sizes**: 100 points for live mode, 2000 for replay
+- **Auto-z optimization**: Smart zoom management for both modes
+- **Trail visualization**: Complete GPS trajectory with position cursor
 
-### 🔧 **Technical Improvements**
-- **Signal management**: Fixed all signal/slot connection issues
-- **Data filtering**: Smart None value handling to prevent diagonal lines
-- **Batch processing**: Optimized update rates for better performance
-- **Memory efficiency**: Reduced memory footprint for large datasets
-- **Crash prevention**: Comprehensive error handling throughout application
+### 📊 **Improved Replay Mode**
+- **Fixed cursor synchronization**: All charts now show correct position points
+- **Auto-zoom during replay**: Charts automatically adjust to data range
+- **Fuel volume tracking**: Correct cumulative volume calculation and display
+- **Better data handling**: Robust error handling for missing or corrupted data
+
+### 🛠️ **Technical Improvements**
+- **Mode-specific optimizations**: Different behaviors for live vs replay modes
+- **Memory management**: Efficient circular buffers with adaptive sizing
+- **Thread safety**: Improved concurrent data access
+- **Bug fixes**: Resolved cursor display and auto-zoom issues
+
+---
+
+## 🚀 **What's New in v2.3**
+
+### ⛽ **Fuel Consumption Monitoring**
+- **New fuel charts**: RPM, acceleration, injection timing, fuel flow rate, cumulative volume
+- **Real-time calculations**: Injection timing based on RPM and throttle
+- **Fuel flow analysis**: L/h calculations from injection data
+- **Cumulative volume tracking**: Total fuel consumption over time
+- **Synchronized cursors**: Interactive cursor system across all fuel charts
+
+### 🎨 **UI/UX Improvements**
+- **Clean interface**: Removed redundant "Données Actuelles" widget
+- **Better chart separation**: Optimized Y-axis ranges for each fuel parameter
+- **Cursor synchronization**: Perfect alignment between temporal slider and chart cursors
+- **Enhanced visual clarity**: Distinct colors and scales for each fuel metric
+
+### 🔧 **Technical Enhancements**
+- **Improved data validation**: Smart filtering for fuel-related calculations
+- **Enhanced cursor management**: Accurate cursor positioning on all charts
+- **Better error handling**: Graceful handling of missing fuel data
+- **Performance optimizations**: Efficient fuel data processing and display
 
 ---
 
 <div align="center">
 
-**🏎️ Made with ❤️ for EIGSI Formula Student - Advanced Telemetry System v2.2**
+**🏎️ Made with ❤️ for EIGSI Formula Student - Advanced Telemetry System v2.4**
 
-**Latest Release**: v2.2.0 (2026-02-09) - Performance & Stability Optimizations
+**Latest Release**: v2.4.0 (2026-03-16) - Performance Optimizations & Enhanced Track Map
 
 </div>
