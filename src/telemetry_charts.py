@@ -19,7 +19,7 @@ except:
     # Fallback si setConfigOptions n'est pas disponible
     pass
 from collections import deque
-from .csv_parser import TelemetryData
+from csv_parser import TelemetryData
 
 
 class TelemetryCharts(QWidget):
@@ -31,26 +31,14 @@ class TelemetryCharts(QWidget):
         """Initialize telemetry charts."""
         super().__init__(parent)
         
-        # Data storage with deque for performance
-        max_points = 1000
+        # Data storage with deque for performance - Only 5 fuel parameters
+        max_points = 300  # Further reduced from 500 for better performance
         self.time_data = deque(maxlen=max_points)
-        self.speed_data = deque(maxlen=max_points)
         self.rpm_data = deque(maxlen=max_points)
-        self.throttle_data = deque(maxlen=max_points)
-        self.battery_temp_data = deque(maxlen=max_points)
-        
-        self.g_force_lat_data = deque(maxlen=max_points)
-        self.g_force_long_data = deque(maxlen=max_points)
-        self.g_force_vert_data = deque(maxlen=max_points)
-        
-        self.accel_x_data = deque(maxlen=max_points)
-        self.accel_y_data = deque(maxlen=max_points)
-        self.accel_z_data = deque(maxlen=max_points)
-        
-        self.tire_fl_data = deque(maxlen=max_points)
-        self.tire_fr_data = deque(maxlen=max_points)
-        self.tire_rl_data = deque(maxlen=max_points)
-        self.tire_rr_data = deque(maxlen=max_points)
+        self.acceleration_data = deque(maxlen=max_points)
+        self.injection_data = deque(maxlen=max_points)
+        self.fuel_flow_lh_data = deque(maxlen=max_points)
+        self.fuel_volume_data = deque(maxlen=max_points)
         
         # Display offset for oscilloscope effect
         self.display_offset = 0.0
@@ -60,11 +48,11 @@ class TelemetryCharts(QWidget):
     def reset_auto_zoom(self):
         """Reset auto-zoom to show last 2 minutes (120 seconds) of data."""
         plots_to_reset = [
-            (self.speed_rpm_plot, "Speed"),
-            (self.throttle_temp_plot, "Throttle"), 
-            (self.g_force_plot, "G-Forces"),
-            (self.accel_plot, "Acceleration"),
-            (self.tire_temp_plot, "Tire")
+            (self.rpm_plot, "RPM"),
+            (self.acceleration_plot, "Acceleration"), 
+            (self.injection_plot, "Injection"),
+            (self.fuel_flow_lh_plot, "Fuel Flow L/h"),
+            (self.fuel_volume_plot, "Fuel Volume L")
         ]
         
         for plot, plot_name in plots_to_reset:
@@ -110,11 +98,11 @@ class TelemetryCharts(QWidget):
     def full_auto_zoom(self):
         """Enable full auto-zoom for all plots (automatic view adjustment)."""
         plots_to_reset = [
-            self.speed_rpm_plot,
-            self.throttle_temp_plot, 
-            self.g_force_plot,
-            self.accel_plot,
-            self.tire_temp_plot
+            self.rpm_plot,
+            self.acceleration_plot, 
+            self.injection_plot,
+            self.fuel_flow_lh_plot,
+            self.fuel_volume_plot
         ]
         
         for plot in plots_to_reset:
@@ -274,25 +262,26 @@ class TelemetryCharts(QWidget):
         chart_layout.setSpacing(15)
         chart_layout.setContentsMargins(15, 15, 15, 15)
         
-        # Speed and RPM chart (row 0, col 0)
-        self.speed_rpm_plot = self.create_plot("Speed & RPM", "Time (s)", ["Speed (km/h)", "RPM/100"])
-        chart_layout.addWidget(self.speed_rpm_plot, 0, 0)
+        # Create 5 fuel parameter charts
+        # RPM chart (row 0, col 0)
+        self.rpm_plot = self.create_plot("Régime Moteur", "Time (s)", ["RPM (tr/min)"])
+        chart_layout.addWidget(self.rpm_plot, 0, 0)
         
-        # Throttle and Battery Temperature chart (row 0, col 1)
-        self.throttle_temp_plot = self.create_plot("Throttle & Battery Temp", "Time (s)", ["Throttle (%)", "Temp (°C)"])
-        chart_layout.addWidget(self.throttle_temp_plot, 0, 1)
+        # Acceleration chart (row 0, col 1)
+        self.acceleration_plot = self.create_plot("Accélération", "Time (s)", ["Accélération (m/s²)"])
+        chart_layout.addWidget(self.acceleration_plot, 0, 1)
         
-        # G-Forces chart (row 1, col 0)
-        self.g_force_plot = self.create_plot("G-Forces", "Time (s)", ["Lateral (g)", "Longitudinal (g)", "Vertical (g)"])
-        chart_layout.addWidget(self.g_force_plot, 1, 0)
+        # Injection chart (row 1, span 2 columns)
+        self.injection_plot = self.create_plot("Injection", "Time (s)", ["Injection (µs)"])
+        chart_layout.addWidget(self.injection_plot, 1, 0, 1, 2)
         
-        # Acceleration chart (row 1, col 1)
-        self.accel_plot = self.create_plot("Acceleration", "Time (s)", ["X (m/s²)", "Y (m/s²)", "Z (m/s²)"])
-        chart_layout.addWidget(self.accel_plot, 1, 1)
+        # Fuel Flow L/h chart (row 2, col 0)
+        self.fuel_flow_lh_plot = self.create_plot("Débit Carburant", "Time (s)", ["Débit (L/h)"])
+        chart_layout.addWidget(self.fuel_flow_lh_plot, 2, 0)
         
-        # Tire Temperatures chart (row 2, span 2 columns)
-        self.tire_temp_plot = self.create_plot("Tire Temperatures", "Time (s)", ["FL (°C)", "FR (°C)", "RL (°C)", "RR (°C)"])
-        chart_layout.addWidget(self.tire_temp_plot, 2, 0, 1, 2)
+        # Fuel Volume L chart (row 2, col 1)
+        self.fuel_volume_plot = self.create_plot("Volume Carburant", "Time (s)", ["Volume (L)"])
+        chart_layout.addWidget(self.fuel_volume_plot, 2, 1)
         
         charts_container.setLayout(chart_layout)
         layout.addWidget(charts_container)
@@ -367,27 +356,22 @@ class TelemetryCharts(QWidget):
                 )
                 # Initialize with empty data to prevent automatic (0,0) points
                 curve.setData([], [])
+                curves.append(curve)
+                
+                # Create current point marker for this curve
+                current_point = plot_widget.plot([], [], 
+                                                pen=None, 
+                                                symbol='o', 
+                                                symbolBrush=color, 
+                                                symbolSize=8, 
+                                                symbolPen=pg.mkPen(color='white', width=2),
+                                                name=f'Current {legend_name}')
+                current_points.append(current_point)
+                
             except Exception as e:
                 print(f"! Error creating curve: {e}")
-                curve = plot_widget.plot(pen={'color': color, 'width': 3}, name=legend_name)
-                # Initialize with empty data to prevent automatic (0,0) points
-                curve.setData([], [])
-            curves.append(curve)
-            
-            # Modern current point with glow effect - COMMENTED TO REMOVE PERMANENT POINTS
-            # current_point = plot_widget.plot(
-            #     pen=None, 
-            #     symbol='o', 
-            #     symbolBrush=color, 
-            #     symbolSize=12, 
-            #     symbolPen=pg.mkPen(color='white', width=2),
-            #     name=f'Current {legend_name}'
-            # )
-            # current_points.append(current_point)
-            
-            # Create empty placeholder for current points (will be used by cursor)
-            current_points.append(None)
-        
+                curves.append(None)
+                current_points.append(None)
         # Store curves and current points with plot for later updates
         plot_widget.curves = curves
         plot_widget.current_points = current_points  # Store all current points
@@ -401,104 +385,96 @@ class TelemetryCharts(QWidget):
             return
         
         # Validate data to prevent None values that cause diagonals
-        if (data.time_ms is None or data.speed is None or data.rpm is None or
-            data.throttle is None or data.battery_temp is None):
+        # Only validate the fields we actually use for fuel calculations
+        if (data.time_ms is None or data.rpm is None):
             return  # Skip invalid data points
         
         # Convert time to seconds for better display
         # Keep original time for data, but track display offset
         time_seconds = data.time_ms / 1000.0
         
-        # Update data storage with validated data
+        # Update data storage with validated data - Only 5 fuel parameters
         self.time_data.append(time_seconds)
-        self.speed_data.append(data.speed if data.speed is not None else 0)
-        self.rpm_data.append((data.rpm / 100) if data.rpm is not None else 0)  # Scale RPM for better visualization
-        self.throttle_data.append(data.throttle if data.throttle is not None else 0)
-        self.battery_temp_data.append(data.battery_temp if data.battery_temp is not None else 0)
+        self.rpm_data.append(data.rpm if data.rpm is not None else 0)
         
-        self.g_force_lat_data.append(data.g_force_lat if data.g_force_lat is not None else 0)
-        self.g_force_long_data.append(data.g_force_long if data.g_force_long is not None else 0)
-        self.g_force_vert_data.append(data.g_force_vert if data.g_force_vert is not None else 0)
+        # Calculate acceleration from G-forces (simplified)
+        acceleration = data.g_force_long * 9.81 if data.g_force_long is not None else 0
+        self.acceleration_data.append(acceleration)
         
-        self.accel_x_data.append(data.acceleration_x if data.acceleration_x is not None else 0)
-        self.accel_y_data.append(data.acceleration_y if data.acceleration_y is not None else 0)
-        self.accel_z_data.append(data.acceleration_z if data.acceleration_z is not None else 0)
+        # Simulate injection data based on RPM and throttle (µs)
+        injection_us = 800 + (data.rpm / 9500) * 6000 + data.throttle * 200 if data.rpm is not None and data.throttle is not None else 0
+        self.injection_data.append(injection_us)
         
-        self.tire_fl_data.append(data.tire_temp_fl if data.tire_temp_fl is not None else 0)
-        self.tire_fr_data.append(data.tire_temp_fr if data.tire_temp_fr is not None else 0)
-        self.tire_rl_data.append(data.tire_temp_rl if data.tire_temp_rl is not None else 0)
-        self.tire_rr_data.append(data.tire_temp_rr if data.tire_temp_rr is not None else 0)
+        # Calculate fuel flow L/h based on injection
+        fuel_flow_lh = (injection_us / 1000000) * (data.rpm / 60) * 0.415 * 3600 / 1000 if data.rpm is not None else 0
+        self.fuel_flow_lh_data.append(fuel_flow_lh)
         
-        # Update plots
-        self.update_plots()
+        # Calculate cumulative volume L
+        if len(self.fuel_volume_data) > 0:
+            # Calculate fuel flow first
+            rpm = getattr(data, 'rpm', 0)
+            throttle = getattr(data, 'throttle', 0)
+            injection_us = 800 + (rpm / 9500) * 6000 + throttle * 200 if rpm is not None and throttle is not None else 0
+            fuel_flow_lh = (injection_us / 1000000) * (rpm / 60) * 0.415 * 3600 / 1000 if rpm is not None else 0
+            
+            # Add current fuel flow to the last cumulative volume
+            last_volume = self.fuel_volume_data[-1]
+            # Convert L/h to L/s and add to cumulative volume
+            volume_total = last_volume + (fuel_flow_lh / 3600)
+        else:
+            # First point - start from 0
+            volume_total = 0
+        self.fuel_volume_data.append(volume_total)
+        
+        # Debug: print volume calculation
+        # print(f"Fuel volume: {volume_total:.6f} L (total points: {len(self.fuel_volume_data)})")
+        
+        # Update plots only if not in batch mode (for live mode optimization)
+        if not hasattr(self, '_batch_mode') or not self._batch_mode:
+            self.update_plots()
     
     def update_plots(self):
-        """Update all plot curves with current data."""
+        """Update all plot curves with current data - optimized for speed."""
         if not self.time_data:
             return
         
         # Use original time data (no offset) - let the view handle the scrolling
         time_array = np.array(self.time_data)
         
-        # Check if first time is > 0 to avoid diagonal lines from origin
-        first_time = time_array[0] if len(time_array) > 0 else 0
-        
         try:
-            # Create valid data mask (exclude None and invalid values)
-            valid_mask = np.array([t is not None for t in self.time_data])
-            valid_time = time_array[valid_mask]
+            # Debug: show that plots are being updated
+            # print(f"Updating plots with {len(time_array)} points")
             
-            # Update Speed & RPM plot with valid data only
-            if len(self.speed_data) > 0:
-                speed_array = np.array(self.speed_data)[valid_mask]
-                self.speed_rpm_plot.curves[0].setData(valid_time, speed_array)
-            if len(self.rpm_data) > 0:
-                rpm_array = np.array(self.rpm_data)[valid_mask]
-                self.speed_rpm_plot.curves[1].setData(valid_time, rpm_array)
+            # Update 5 fuel parameter plots - optimized for live mode
+            # RPM plot
+            if hasattr(self.rpm_plot, 'curves') and len(self.rpm_plot.curves) > 0 and len(self.rpm_data) > 0:
+                rpm_array = np.array(self.rpm_data)
+                self.rpm_plot.curves[0].setData(time_array, rpm_array)
+                # self.rpm_plot.update()  # Skip forced refresh for performance
             
-            # Update Throttle & Battery Temperature plot
-            if len(self.throttle_data) > 0:
-                throttle_array = np.array(self.throttle_data)[valid_mask]
-                self.throttle_temp_plot.curves[0].setData(valid_time, throttle_array)
-            if len(self.battery_temp_data) > 0:
-                temp_array = np.array(self.battery_temp_data)[valid_mask]
-                self.throttle_temp_plot.curves[1].setData(valid_time, temp_array)
+            # Acceleration plot
+            if hasattr(self.acceleration_plot, 'curves') and len(self.acceleration_plot.curves) > 0 and len(self.acceleration_data) > 0:
+                accel_array = np.array(self.acceleration_data)
+                self.acceleration_plot.curves[0].setData(time_array, accel_array)
+                # self.acceleration_plot.update()  # Skip forced refresh for performance
             
-            # Update G-Forces plot
-            if len(self.g_force_lat_data) > 0:
-                g_lat_array = np.array(self.g_force_lat_data)[valid_mask]
-                self.g_force_plot.curves[0].setData(valid_time, g_lat_array)
-            if len(self.g_force_long_data) > 0:
-                g_long_array = np.array(self.g_force_long_data)[valid_mask]
-                self.g_force_plot.curves[1].setData(valid_time, g_long_array)
-            if len(self.g_force_vert_data) > 0:
-                g_vert_array = np.array(self.g_force_vert_data)[valid_mask]
-                self.g_force_plot.curves[2].setData(valid_time, g_vert_array)
+            # Injection plot
+            if hasattr(self.injection_plot, 'curves') and len(self.injection_plot.curves) > 0 and len(self.injection_data) > 0:
+                injection_array = np.array(self.injection_data)
+                self.injection_plot.curves[0].setData(time_array, injection_array)
+                # self.injection_plot.update()  # Skip forced refresh for performance
             
-            # Update Acceleration plot
-            if len(self.accel_x_data) > 0:
-                accel_x_array = np.array(self.accel_x_data)[valid_mask]
-                self.accel_plot.curves[0].setData(valid_time, accel_x_array)
-            if len(self.accel_y_data) > 0:
-                accel_y_array = np.array(self.accel_y_data)[valid_mask]
-                self.accel_plot.curves[1].setData(valid_time, accel_y_array)
-            if len(self.accel_z_data) > 0:
-                accel_z_array = np.array(self.accel_z_data)[valid_mask]
-                self.accel_plot.curves[2].setData(valid_time, accel_z_array)
+            # Fuel Flow L/h plot
+            if hasattr(self.fuel_flow_lh_plot, 'curves') and len(self.fuel_flow_lh_plot.curves) > 0 and len(self.fuel_flow_lh_data) > 0:
+                fuel_flow_array = np.array(self.fuel_flow_lh_data)
+                self.fuel_flow_lh_plot.curves[0].setData(time_array, fuel_flow_array)
+                # self.fuel_flow_lh_plot.update()  # Skip forced refresh for performance
             
-            # Update Tire Temperatures plot
-            if len(self.tire_fl_data) > 0:
-                tire_fl_array = np.array(self.tire_fl_data)[valid_mask]
-                self.tire_temp_plot.curves[0].setData(valid_time, tire_fl_array)
-            if len(self.tire_fr_data) > 0:
-                tire_fr_array = np.array(self.tire_fr_data)[valid_mask]
-                self.tire_temp_plot.curves[1].setData(valid_time, tire_fr_array)
-            if len(self.tire_rl_data) > 0:
-                tire_rl_array = np.array(self.tire_rl_data)[valid_mask]
-                self.tire_temp_plot.curves[2].setData(valid_time, tire_rl_array)
-            if len(self.tire_rr_data) > 0:
-                tire_rr_array = np.array(self.tire_rr_data)[valid_mask]
-                self.tire_temp_plot.curves[3].setData(valid_time, tire_rr_array)
+            # Fuel Volume L plot
+            if hasattr(self.fuel_volume_plot, 'curves') and len(self.fuel_volume_plot.curves) > 0 and len(self.fuel_volume_data) > 0:
+                volume_array = np.array(self.fuel_volume_data)
+                self.fuel_volume_plot.curves[0].setData(time_array, volume_array)
+                # self.fuel_volume_plot.update()  # Skip forced refresh for performance
                 
         except Exception as e:
             print(f"! Error updating plots: {e}")
@@ -507,57 +483,50 @@ class TelemetryCharts(QWidget):
     
     def clear_data(self):
         """Clear all chart data and reset points to origin."""
-        # Clear all data arrays
+        # Clear all data arrays - Only 5 fuel parameters
         self.time_data.clear()
-        self.speed_data.clear()
         self.rpm_data.clear()
-        self.throttle_data.clear()
-        self.battery_temp_data.clear()
-        self.g_force_lat_data.clear()
-        self.g_force_long_data.clear()
-        self.g_force_vert_data.clear()
-        self.accel_x_data.clear()
-        self.accel_y_data.clear()
-        self.accel_z_data.clear()
-        self.tire_fl_data.clear()
-        self.tire_fr_data.clear()
-        self.tire_rl_data.clear()
-        self.tire_rr_data.clear()
+        self.acceleration_data.clear()
+        self.injection_data.clear()
+        self.fuel_flow_lh_data.clear()
+        self.fuel_volume_data.clear()
         
         # Clear and reset all plots
         plots_to_clear = [
-            (self.speed_rpm_plot, "Speed & RPM"),
-            (self.throttle_temp_plot, "Throttle & Battery Temp"), 
-            (self.g_force_plot, "G-Forces"),
-            (self.accel_plot, "Acceleration"),
-            (self.tire_temp_plot, "Tire Temperatures")
+            (self.rpm_plot, "RPM"),
+            (self.acceleration_plot, "Acceleration"), 
+            (self.injection_plot, "Injection"),
+            (self.fuel_flow_lh_plot, "Fuel Flow L/h"),
+            (self.fuel_volume_plot, "Fuel Volume L")
         ]
         
         for plot, plot_name in plots_to_clear:
-            if plot is not None:
+            if plot is not None and hasattr(plot, 'curves'):
                 # Clear all curves
                 for curve in plot.curves:
-                    curve.clear()
-                    curve.setData([], [])  # Ensure empty data to prevent (0,0) points
+                    if curve is not None:
+                        curve.clear()
+                        curve.setData([], [])  # Ensure empty data to prevent (0,0) points
                 
-                # Clear current points - don't set to (0,0) to avoid diagonals
+                # Clear current points
                 if hasattr(plot, 'current_points'):
                     for current_point in plot.current_points:
-                        if current_point is not None:  # Skip None points
-                            current_point.clear()  # Clear instead of setting to (0,0)
+                        if current_point is not None:
+                            current_point.clear()
+                            current_point.setData([], [])
                 
                 # Reset plot view to show origin with appropriate ranges
                 view_box = plot.getViewBox()
-                if "Speed" in plot_name:
-                    view_box.setRange(xRange=[-1, 5], yRange=[-10, 200], padding=0)
-                elif "Throttle" in plot_name:
-                    view_box.setRange(xRange=[-1, 5], yRange=[-10, 110], padding=0)
-                elif "G-Forces" in plot_name:
-                    view_box.setRange(xRange=[-1, 5], yRange=[-3, 3], padding=0)
+                if "RPM" in plot_name:
+                    view_box.setRange(xRange=[-1, 5], yRange=[-500, 10000], padding=0)
                 elif "Acceleration" in plot_name:
-                    view_box.setRange(xRange=[-1, 5], yRange=[-10, 10], padding=0)
-                elif "Tire" in plot_name:
-                    view_box.setRange(xRange=[-1, 5], yRange=[-10, 100], padding=0)
+                    view_box.setRange(xRange=[-1, 5], yRange=[-20, 20], padding=0)
+                elif "Injection" in plot_name:
+                    view_box.setRange(xRange=[-1, 5], yRange=[0, 20000], padding=0)
+                elif "Fuel Flow L/h" in plot_name:
+                    view_box.setRange(xRange=[-1, 5], yRange=[0, 50], padding=0)
+                elif "Fuel Volume L" in plot_name:
+                    view_box.setRange(xRange=[-1, 5], yRange=[0, 1], padding=0)  # Increased from 0-20 to 0-1 for better visibility
                 else:
                     view_box.setRange(xRange=[-1, 5], yRange=[-10, 10], padding=0)
                 
