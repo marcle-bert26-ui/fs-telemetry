@@ -8,6 +8,12 @@ import csv
 from datetime import datetime
 from typing import TextIO
 
+try:
+    from csv_parser import CSV_HEADER
+except ImportError:
+    # Fallback for testing environment
+    CSV_HEADER = ['time_ms', 'speed', 'rpm', 'throttle', 'battery_temp', 'g_force_lat', 'g_force_long', 'g_force_vert']
+
 class CSVLogger:
     """CSV logger for telemetry data."""
     
@@ -38,7 +44,6 @@ class CSVLogger:
         self.csv_writer = csv.writer(self.file_handle)
         
         # Write header
-        from csv_parser import CSV_HEADER
         self.csv_writer.writerow(CSV_HEADER)
         
         return self.filename
