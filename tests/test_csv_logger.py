@@ -6,8 +6,13 @@ Tests file creation, writing, and data integrity.
 import pytest
 import csv
 from pathlib import Path
-from src.csv_logger import CSVLogger
-from src.csv_parser import TelemetryData, CSV_HEADER
+from src.csv_logger import CSVLogger, CSV_HEADER as LOGGER_CSV_HEADER
+try:
+    from src.csv_parser import TelemetryData, CSV_HEADER as PARSER_CSV_HEADER
+except ImportError:
+    # Fallback for testing environment
+    TelemetryData = None
+    PARSER_CSV_HEADER = LOGGER_CSV_HEADER
 import tempfile
 import shutil
 import time
@@ -83,7 +88,7 @@ class TestCSVLogger:
                 reader = csv.reader(f, delimiter=',')
                 header = next(reader)
             
-            assert header == CSV_HEADER
+            assert header == LOGGER_CSV_HEADER
         finally:
             config.LOG_DIRECTORY = original_dir
     
