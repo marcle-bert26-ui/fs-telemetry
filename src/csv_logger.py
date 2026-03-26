@@ -11,8 +11,14 @@ from typing import TextIO
 try:
     from csv_parser import CSV_HEADER
 except ImportError:
-    # Fallback for testing environment
-    CSV_HEADER = ['time_ms', 'speed', 'rpm', 'throttle', 'battery_temp', 'g_force_lat', 'g_force_long', 'g_force_vert']
+    # Fallback for testing environment - complete header matching csv_parser.py
+    CSV_HEADER = [
+        "time_ms", "speed", "rpm", "throttle", "battery_temp", 
+        "g_force_lat", "g_force_long", "g_force_vert", 
+        "acceleration_x", "acceleration_y", "acceleration_z",
+        "gps_latitude", "gps_longitude", "gps_altitude",
+        "tire_temp_fl", "tire_temp_fr", "tire_temp_rl", "tire_temp_rr"
+    ]
 
 class CSVLogger:
     """CSV logger for telemetry data."""
