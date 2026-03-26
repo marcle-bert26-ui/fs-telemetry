@@ -463,7 +463,7 @@ class TelemetryCharts(QWidget):
         self.fuel_volume_data.append(volume_total)
         
         # Debug: print volume calculation
-        print(f"Fuel volume: {volume_total:.6f} L (added: {getattr(locals(), 'volume_added', 0):.6f} L, fuel_flow: {fuel_flow_lh:.2f} L/h, rpm: {getattr(data, 'rpm', 0)}, injection_us: {injection_us:.0f}µs)")
+        # print(f"Fuel volume: {volume_total:.6f} L (added: {volume_added:.6f} L, fuel_flow: {fuel_flow_lh:.2f} L/h, rpm: {getattr(data, 'rpm', 0)}, injection_us: {injection_us:.0f}µs)")
         
         # Update plots only if not in batch mode (for live mode optimization)
         if not hasattr(self, '_batch_mode') or not self._batch_mode:

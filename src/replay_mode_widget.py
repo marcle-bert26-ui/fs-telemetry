@@ -36,8 +36,8 @@ class ReplayModeWidget(QWidget):
         # Connect temporal analysis sync signal to charts - DISABLED for replay mode to avoid double loading and auto-scroll
         # self.temporal_analysis.data_sync_signal.connect(self.charts.update_data)
         
-        # Connect temporal analysis slider directly to charts for cursor control - DISABLED for replay mode
-        # self.temporal_analysis.range_slider.valueChanged.connect(self.update_charts_cursor_direct)
+        # Connect temporal analysis slider directly to charts for cursor control - REACTIVATED for replay mode
+        self.temporal_analysis.range_slider.valueChanged.connect(self.update_charts_cursor_direct)
         
         # Définir stop_replay avant de l'utiliser dans init_ui
         self.stop_replay = self.stop_replay_method
@@ -569,11 +569,46 @@ class ReplayModeWidget(QWidget):
                     self.g_lat_label.setText(f"{current_data.g_force_lat:.2f}g")
                     self.g_long_label.setText(f"{current_data.g_force_long:.2f}g")
                     self.g_vert_label.setText(f"{current_data.g_force_vert:.2f}g")
+                
+                # Update statistics based on cursor position
+                self.update_cursor_stats(value)
         # Skip point creation to avoid visual clutter and performance issues
         
         # Also call the temporal analysis update_telemetry_charts function
         if hasattr(self.temporal_analysis, 'data_selector'):
             self.temporal_analysis.data_selector.update_telemetry_charts(self.charts, value)
+    
+    def update_cursor_stats(self, point_idx):
+        """Update statistics based on cursor position."""
+        if not hasattr(self.temporal_analysis, 'all_data') or not self.temporal_analysis.all_data:
+            return
+        
+        # Calculate stats from data[0] to data[point_idx]
+        data_slice = self.temporal_analysis.all_data[:point_idx + 1]
+        if not data_slice:
+            return
+        
+        # Calculate statistics
+        speeds = [d.speed for d in data_slice if hasattr(d, 'speed') and d.speed is not None]
+        rpms = [d.rpm for d in data_slice if hasattr(d, 'rpm') and d.rpm is not None]
+        temps = [d.battery_temp for d in data_slice if hasattr(d, 'battery_temp') and d.battery_temp is not None]
+        
+        # Update statistics labels
+        if speeds:
+            max_speed = max(speeds)
+            avg_speed = sum(speeds) / len(speeds)
+            self.max_speed_label.setText(f"{max_speed:.1f} km/h")
+            self.avg_speed_label.setText(f"{avg_speed:.1f} km/h")
+        
+        if rpms:
+            max_rpm = max(rpms)
+            self.max_rpm_label.setText(f"{max_rpm:.0f}")
+        
+        if temps:
+            avg_temp = sum(temps) / len(temps)
+            self.avg_temp_label.setText(f"{avg_temp:.1f} °C")
+        
+        self.data_count_label.setText(f"{len(data_slice)}")
     
     def update_charts_cursor(self, min_val, max_val):
         """Update charts cursor position based on temporal analysis slider."""
@@ -674,14 +709,20 @@ class ReplayModeWidget(QWidget):
                                         rpm = getattr(data_i, 'rpm', 0)
                                         throttle = getattr(data_i, 'throttle', 0)
                                         injection_us = 800 + (rpm / 9500) * 6000 + throttle * 200 if rpm is not None and throttle is not None else 0
-                                        # CORRECTED: 4 temps engine + proper injector flow rate
-                                        if rpm is not None:
-                                            injector_flow_rate = 0.415 / 60  # L/s (débit continu)
-                                            injections_per_second = (rpm / 60 / 2)  # injections/s (4 temps)
-                                            fuel_flow_lh = (injection_us / 1000000) * injector_flow_rate * injections_per_second * 3600
-                                        else:
-                                            fuel_flow_lh = 0
-                                        volume_total += fuel_flow_lh / 3600  # Convert L/h to L/s
+                                        # CORRECTED: 4 temps engine + proper injector flow rate - calculate volume directly
+                                        if rpm is not None and rpm > 0:
+                                            # Volume par injection (L) = temps_injection * débit_injecteur
+                                            volume_per_injection = (injection_us / 1000000) * (0.415 / 60)  # L
+                                            
+                                            # Nombre d'injections par seconde (4 temps)
+                                            injections_per_second = rpm / 60 / 2
+                                            
+                                            # Volume ajouté par seconde = volume_par_injection * injections_par_seconde
+                                            volume_per_second = volume_per_injection * injections_per_second
+                                            
+                                            # Ajout direct du volume par seconde (pas conversion L/h)
+                                            volume_total += volume_per_second
+                                        # Si rpm = 0, on n'ajoute rien
                             value = volume_total
                         else:
                             value = 0
