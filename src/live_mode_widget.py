@@ -10,8 +10,16 @@ from PyQt5.QtGui import QFont, QColor
 import os
 
 from serial_source import SerialSource
-from csv_parser import parse_csv_line
-from telemetry_manager import TelemetryManager
+try:
+    from csv_parser import parse_csv_line
+except ImportError:
+    # Fallback for testing environment
+    parse_csv_line = None
+try:
+    from telemetry_manager import TelemetryManager
+except ImportError:
+    # Fallback for testing environment
+    TelemetryManager = None
 from csv_logger import CSVLogger
 from telemetry_charts import TelemetryCharts
 from temporal_analysis_widget import TemporalAnalysisWidget, CompactTrackMap

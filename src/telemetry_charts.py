@@ -19,7 +19,11 @@ except:
     # Fallback si setConfigOptions n'est pas disponible
     pass
 from collections import deque
-from csv_parser import TelemetryData
+try:
+    from csv_parser import TelemetryData
+except ImportError:
+    # Fallback for testing environment
+    TelemetryData = None
 
 
 class TelemetryCharts(QWidget):

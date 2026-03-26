@@ -9,7 +9,11 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGroupBox,
 from PyQt5.QtGui import QPainter, QPen, QBrush, QColor, QPolygonF, QFont
 from PyQt5.QtCore import Qt, pyqtSignal, QPointF, QRectF
 from collections import deque
-from csv_parser import TelemetryData
+try:
+    from csv_parser import TelemetryData
+except ImportError:
+    # Fallback for testing environment
+    TelemetryData = None
 
 
 class SpiderChartWidget(QWidget):

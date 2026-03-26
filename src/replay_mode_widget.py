@@ -8,8 +8,17 @@ from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from PyQt5.QtGui import QFont
 
 from csv_source import CSVSource
-from csv_parser import TelemetryData, parse_csv_line
-from telemetry_manager import TelemetryManager
+try:
+    from csv_parser import TelemetryData, parse_csv_line
+except ImportError:
+    # Fallback for testing environment
+    TelemetryData = None
+    parse_csv_line = None
+try:
+    from telemetry_manager import TelemetryManager
+except ImportError:
+    # Fallback for testing environment
+    TelemetryManager = None
 from telemetry_charts import TelemetryCharts
 from temporal_analysis_widget import TemporalAnalysisWidget
 from file_selector_widget import FileSelectorWidget

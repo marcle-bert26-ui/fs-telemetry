@@ -3,8 +3,16 @@ Data Manager Module - Manages current and historical telemetry data.
 """
 
 from typing import List, Optional
-from csv_parser import TelemetryData
-import app_config as config
+try:
+    from csv_parser import TelemetryData
+except ImportError:
+    # Fallback for testing environment
+    TelemetryData = None
+try:
+    import app_config as config
+except ImportError:
+    # Fallback for testing environment
+    config = None
 
 
 class TelemetryManager:

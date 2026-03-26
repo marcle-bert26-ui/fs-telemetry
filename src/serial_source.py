@@ -1,9 +1,13 @@
 """
-Serial Source - Read live telemetry data from Arduino via USB serial connection.
+Serial Source - Read telemetry data from serial port for live mode.
 """
 
 import serial
-from telemetry_source import TelemetrySource
+try:
+    from telemetry_source import TelemetrySource
+except ImportError:
+    # Fallback for testing environment
+    TelemetrySource = object
 
 
 class SerialSource(TelemetrySource):

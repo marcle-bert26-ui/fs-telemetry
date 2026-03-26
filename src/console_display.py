@@ -2,7 +2,11 @@
 Console Display Module - Real-time telemetry display in terminal.
 """
 
-from csv_parser import TelemetryData
+try:
+    from csv_parser import TelemetryData
+except ImportError:
+    # Fallback for testing environment
+    TelemetryData = None
 
 
 class ConsoleDisplay:

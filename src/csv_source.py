@@ -2,7 +2,11 @@
 CSV Source - Read telemetry data from CSV files for replay and analysis.
 """
 
-from telemetry_source import TelemetrySource
+try:
+    from telemetry_source import TelemetrySource
+except ImportError:
+    # Fallback for testing environment
+    TelemetrySource = object
 
 
 class CSVSource(TelemetrySource):

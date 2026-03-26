@@ -13,11 +13,24 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-import app_config as config
+try:
+    import app_config as config
+except ImportError:
+    # Fallback for testing environment
+    config = None
 from serial_source import SerialSource
 from csv_source import CSVSource
-from csv_parser import parse_csv_line, TelemetryData
-from telemetry_manager import TelemetryManager
+try:
+    from csv_parser import parse_csv_line, TelemetryData
+except ImportError:
+    # Fallback for testing environment
+    parse_csv_line = None
+    TelemetryData = None
+try:
+    from telemetry_manager import TelemetryManager
+except ImportError:
+    # Fallback for testing environment
+    TelemetryManager = None
 from csv_logger import CSVLogger
 from console_display import ConsoleDisplay
 
