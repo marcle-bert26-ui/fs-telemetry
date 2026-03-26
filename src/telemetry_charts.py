@@ -409,39 +409,61 @@ class TelemetryCharts(QWidget):
         # 415 cc/min = 0.415 L/min = 0.415/60 L/s (débit continu de l'injecteur)
         # Moteur 4 temps : 1 injection tous les 2 tours
         if data.rpm is not None:
-            injector_flow_rate = 0.415 / 60  # L/s (débit continu)
-            injections_per_second = (data.rpm / 60 / 2)  # injections/s (4 temps)
-            fuel_flow_lh = (injection_us / 1000000) * injector_flow_rate * injections_per_second * 3600
+            # Volume par injection (L) = temps_injection * débit_injecteur
+            volume_per_injection = (injection_us / 1000000) * (0.415 / 60)  # L
+            
+            # Nombre d'injections par seconde (4 temps)
+            injections_per_second = (data.rpm / 60 / 2)  # injections/s
+            
+            # Volume par seconde = volume_par_injection * injections_par_seconde
+            volume_per_second = volume_per_injection * injections_per_second
+            
+            # Conversion en L/h pour affichage
+            fuel_flow_lh = volume_per_second * 3600
         else:
             fuel_flow_lh = 0
         self.fuel_flow_lh_data.append(fuel_flow_lh)
         
         # Calculate cumulative volume L (CORRECTED FORMULA)
+        # Calculate fuel flow first with corrected formula
+        rpm = getattr(data, 'rpm', 0)
+        throttle = getattr(data, 'throttle', 0)
+        injection_us = 800 + (rpm / 9500) * 6000 + throttle * 200 if rpm is not None and throttle is not None else 0
+        
+        # Initialize volume_added
+        volume_added = 0
+        
+        # CORRECTED: Calculate volume per injection, not continuous flow
+        if rpm is not None and rpm > 0:
+            # Volume par injection (L) = temps_injection * débit_injecteur
+            volume_per_injection = (injection_us / 1000000) * (0.415 / 60)  # L
+            
+            # Nombre d'injections par seconde (4 temps)
+            injections_per_second = rpm / 60 / 2
+            
+            # Volume ajouté par seconde = volume_par_injection * injections_par_seconde
+            volume_per_second = volume_per_injection * injections_per_second
+            
+            # Conversion en L/h pour cohérence avec fuel_flow_lh
+            fuel_flow_lh = volume_per_second * 3600
+            
+            # Volume ajouté depuis le dernier point (1 seconde d'échantillonnage)
+            volume_added = volume_per_second  # L par seconde
+        else:
+            fuel_flow_lh = 0
+            volume_added = 0
+        
+        # Add current volume to last cumulative volume
         if len(self.fuel_volume_data) > 0:
-            # Calculate fuel flow first with corrected formula
-            rpm = getattr(data, 'rpm', 0)
-            throttle = getattr(data, 'throttle', 0)
-            injection_us = 800 + (rpm / 9500) * 6000 + throttle * 200 if rpm is not None and throttle is not None else 0
-            
-            # CORRECTED: 4 temps engine + proper injector flow rate
-            if rpm is not None:
-                injector_flow_rate = 0.415 / 60  # L/s (débit continu)
-                injections_per_second = (rpm / 60 / 2)  # injections/s (4 temps)
-                fuel_flow_lh = (injection_us / 1000000) * injector_flow_rate * injections_per_second * 3600
-            else:
-                fuel_flow_lh = 0
-            
-            # Add current fuel flow to the last cumulative volume
             last_volume = self.fuel_volume_data[-1]
-            # Convert L/h to L/s and add to cumulative volume
-            volume_total = last_volume + (fuel_flow_lh / 3600)
+            volume_total = last_volume + volume_added
         else:
             # First point - start from 0
-            volume_total = 0
+            volume_total = volume_added
         self.fuel_volume_data.append(volume_total)
         
         # Debug: print volume calculation
-        # print(f"Fuel volume: {volume_total:.6f} L (total points: {len(self.fuel_volume_data)})")
+        print(f"Fuel volume: {volume_total:.6f} L (added: {getattr(locals(), 'volume_added', 0):.6f} L, fuel_flow: {fuel_flow_lh:.2f} L/h, rpm: {getattr(data, 'rpm', 0)}, injection_us: {injection_us:.0f}µs)")
         
         # Update plots only if not in batch mode (for live mode optimization)
         if not hasattr(self, '_batch_mode') or not self._batch_mode:
