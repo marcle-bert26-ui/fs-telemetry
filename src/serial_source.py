@@ -3,7 +3,7 @@ Serial Source - Read live telemetry data from Arduino via USB serial connection.
 """
 
 import serial
-from .telemetry_source import TelemetrySource
+from telemetry_source import TelemetrySource
 
 
 class SerialSource(TelemetrySource):

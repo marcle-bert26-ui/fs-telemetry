@@ -1,6 +1,6 @@
 # Installation Guide
 
-Complete step-by-step installation guide for Formula Student Telemetry System on all platforms.
+Complete step-by-step installation guide for Formula Student Telemetry System v2.3 with advanced fuel consumption monitoring on all platforms.
 
 ## Table of Contents
 
@@ -280,6 +280,8 @@ pytest tests/ -v
 - [ ] All tests passing
 - [ ] Application launches successfully
 - [ ] Can access both LIVE and REPLAY modes
+- [ ] Fuel charts display correctly
+- [ ] Cursor synchronization works across all charts
 
 ## Troubleshooting
 
@@ -405,10 +407,23 @@ rmdir /s fs-telemetry  # Windows
 
 ## Getting Help
 
-- Check [README_APP.md](README_APP.md) for general info
+- Check [README.md](README.md) for general info and new features
 - Review [Common Issues](#troubleshooting)
 - Check GitHub [Issues](https://github.com/yourusername/fs-telemetry/issues)
 - See [CONTRIBUTING.md](CONTRIBUTING.md) for development help
+
+## New in v2.3
+
+### ⛽ Fuel Consumption Monitoring
+- **Real-time fuel charts**: RPM, acceleration, injection, fuel flow, volume
+- **Interactive cursors**: Synchronized across all fuel charts
+- **Smart calculations**: Injection timing and fuel flow analysis
+- **Clean interface**: Removed redundant displays for better UX
+
+### 🎨 Enhanced Interface
+- **Better chart separation**: Optimized Y-axis ranges
+- **Improved cursor tracking**: Perfect synchronization
+- **Modern styling**: Enhanced visual clarity
 
 ---
 
