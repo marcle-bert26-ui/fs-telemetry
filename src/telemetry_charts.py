@@ -405,17 +405,31 @@ class TelemetryCharts(QWidget):
         injection_us = 800 + (data.rpm / 9500) * 6000 + data.throttle * 200 if data.rpm is not None and data.throttle is not None else 0
         self.injection_data.append(injection_us)
         
-        # Calculate fuel flow L/h based on injection
-        fuel_flow_lh = (injection_us / 1000000) * (data.rpm / 60) * 0.415 * 3600 / 1000 if data.rpm is not None else 0
+        # Calculate fuel flow L/h based on injection (CORRECTED FORMULA)
+        # 415 cc/min = 0.415 L/min = 0.415/60 L/s (débit continu de l'injecteur)
+        # Moteur 4 temps : 1 injection tous les 2 tours
+        if data.rpm is not None:
+            injector_flow_rate = 0.415 / 60  # L/s (débit continu)
+            injections_per_second = (data.rpm / 60 / 2)  # injections/s (4 temps)
+            fuel_flow_lh = (injection_us / 1000000) * injector_flow_rate * injections_per_second * 3600
+        else:
+            fuel_flow_lh = 0
         self.fuel_flow_lh_data.append(fuel_flow_lh)
         
-        # Calculate cumulative volume L
+        # Calculate cumulative volume L (CORRECTED FORMULA)
         if len(self.fuel_volume_data) > 0:
-            # Calculate fuel flow first
+            # Calculate fuel flow first with corrected formula
             rpm = getattr(data, 'rpm', 0)
             throttle = getattr(data, 'throttle', 0)
             injection_us = 800 + (rpm / 9500) * 6000 + throttle * 200 if rpm is not None and throttle is not None else 0
-            fuel_flow_lh = (injection_us / 1000000) * (rpm / 60) * 0.415 * 3600 / 1000 if rpm is not None else 0
+            
+            # CORRECTED: 4 temps engine + proper injector flow rate
+            if rpm is not None:
+                injector_flow_rate = 0.415 / 60  # L/s (débit continu)
+                injections_per_second = (rpm / 60 / 2)  # injections/s (4 temps)
+                fuel_flow_lh = (injection_us / 1000000) * injector_flow_rate * injections_per_second * 3600
+            else:
+                fuel_flow_lh = 0
             
             # Add current fuel flow to the last cumulative volume
             last_volume = self.fuel_volume_data[-1]

@@ -654,7 +654,13 @@ class ReplayModeWidget(QWidget):
                             rpm = getattr(data, 'rpm', 0)
                             throttle = getattr(data, 'throttle', 0)
                             injection_us = 800 + (rpm / 9500) * 6000 + throttle * 200
-                            value = (injection_us / 1000000) * (rpm / 60) * 0.415 * 3600 / 1000
+                            # CORRECTED: 4 temps engine + proper injector flow rate
+                            if rpm is not None:
+                                injector_flow_rate = 0.415 / 60  # L/s (débit continu)
+                                injections_per_second = (rpm / 60 / 2)  # injections/s (4 temps)
+                                value = (injection_us / 1000000) * injector_flow_rate * injections_per_second * 3600
+                            else:
+                                value = 0
                         elif plot == self.charts.fuel_volume_plot:
                             # Calculate cumulative volume up to current point
                             volume_total = 0
@@ -662,13 +668,19 @@ class ReplayModeWidget(QWidget):
                                 if i < len(self.charts.fuel_volume_data):
                                     volume_total = self.charts.fuel_volume_data[i]
                                 else:
-                                    # Calculate missing volume if data not loaded
+                                    # Calculate missing volume if data not loaded (CORRECTED FORMULA)
                                     if i < len(self.temporal_analysis.all_data):
                                         data_i = self.temporal_analysis.all_data[i]
                                         rpm = getattr(data_i, 'rpm', 0)
                                         throttle = getattr(data_i, 'throttle', 0)
                                         injection_us = 800 + (rpm / 9500) * 6000 + throttle * 200 if rpm is not None and throttle is not None else 0
-                                        fuel_flow_lh = (injection_us / 1000000) * (rpm / 60) * 0.415 * 3600 / 1000 if rpm is not None else 0
+                                        # CORRECTED: 4 temps engine + proper injector flow rate
+                                        if rpm is not None:
+                                            injector_flow_rate = 0.415 / 60  # L/s (débit continu)
+                                            injections_per_second = (rpm / 60 / 2)  # injections/s (4 temps)
+                                            fuel_flow_lh = (injection_us / 1000000) * injector_flow_rate * injections_per_second * 3600
+                                        else:
+                                            fuel_flow_lh = 0
                                         volume_total += fuel_flow_lh / 3600  # Convert L/h to L/s
                             value = volume_total
                         else:
