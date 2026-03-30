@@ -22,23 +22,23 @@ def test_imports():
         print("   OK: app")
         
         print("2. Importing temporal_analysis_widget...")
-        from src.temporal_analysis_widget import TemporalAnalysisWidget
+        from src.gui.temporal_analysis_widget import TemporalAnalysisWidget
         print("   OK: temporal_analysis_widget")
         
         print("3. Importing live_mode_widget...")
-        from src.live_mode_widget import LiveModeWidget
+        from src.gui.live_mode_widget import LiveModeWidget
         print("   OK: live_mode_widget")
         
         print("4. Importing telemetry_charts...")
-        from src.telemetry_charts import TelemetryCharts
+        from src.visualization.telemetry_charts import TelemetryCharts
         print("   OK: telemetry_charts")
         
         print("5. Importing csv_parser...")
-        from src.csv_parser import parse_csv_line, TelemetryData
+        from src.data.csv_parser import parse_csv_line, TelemetryData
         print("   OK: csv_parser")
         
         print("6. Importing telemetry_manager...")
-        from src.telemetry_manager import TelemetryManager
+        from src.core.telemetry_manager import TelemetryManager
         print("   OK: telemetry_manager")
         
         print("7. Importing PyQt5...")

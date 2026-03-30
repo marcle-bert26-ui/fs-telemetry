@@ -14,10 +14,10 @@ import os
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import app_config as config
-from src.csv_parser import parse_csv_line, TelemetryData
-from src.telemetry_manager import TelemetryManager
-from src.csv_logger import CSVLogger
-from src.csv_source import CSVSource
+from src.data.csv_parser import parse_csv_line, TelemetryData
+from src.core.telemetry_manager import TelemetryManager
+from src.data.csv_logger import CSVLogger
+from src.data.csv_source import CSVSource
 
 
 def test_replay_mode_demo():

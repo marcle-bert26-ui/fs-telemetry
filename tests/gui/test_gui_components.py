@@ -1,0 +1,118 @@
+"""
+Unit tests for GUI components.
+Tests PyQt5 widgets and UI interactions.
+"""
+
+import pytest
+import sys
+from unittest.mock import Mock, patch, MagicMock
+
+# Mock pyqtgraph avant l'import des modules GUI
+pg_mock = MagicMock()
+pg_mock.setConfigOptions = Mock()
+pg_mock.PlotWidget = Mock
+pg_mock.ViewBox = Mock
+pg_mock.AxisItem = Mock
+pg_mock.LegendItem = Mock
+pg_mock.PlotDataItem = Mock
+pg_mock.InfiniteLine = Mock
+sys.modules['pyqtgraph'] = pg_mock
+
+
+class TestGUIComponents:
+    """Test GUI components functionality."""
+    
+    def test_gui_imports(self):
+        """Test that GUI modules can be imported"""
+        try:
+            from src.gui.replay_mode_widget import ReplayModeWidget
+            from src.gui.live_mode_widget import LiveModeWidget
+            from src.visualization.telemetry_charts import TelemetryCharts
+            from src.visualization.spider_charts import GForcesSpiderWidget
+            from src.gui.temporal_analysis_widget import TemporalAnalysisWidget
+        except ImportError as e:
+            pytest.fail(f"Failed to import GUI modules: {e}")
+    
+    def test_telemetry_charts_import(self):
+        """Test that telemetry charts can be imported."""
+        try:
+            from src.visualization.telemetry_charts import TelemetryCharts
+            assert TelemetryCharts is not None
+        except ImportError as e:
+            pytest.fail(f"Failed to import TelemetryCharts: {e}")
+    
+    def test_telemetry_data_creation(self):
+        """Test TelemetryData creation for GUI tests."""
+        from src.data.csv_parser import TelemetryData
+        
+        # Create test data
+        test_data = TelemetryData(
+            time_ms=1000,
+            speed=50.0,
+            rpm=5000,
+            throttle=75.0,
+            battery_temp=60.0,
+            g_force_lat=0.0,
+            g_force_long=0.0,
+            g_force_vert=1.0,
+            acceleration_x=0.0,
+            acceleration_y=0.0,
+            acceleration_z=0.0,
+            gps_latitude=0.0,
+            gps_longitude=0.0,
+            gps_altitude=0.0,
+            tire_temp_fl=0.0,
+            tire_temp_fr=0.0,
+            tire_temp_rl=0.0,
+            tire_temp_rr=0.0
+        )
+        
+        # Verify data
+        assert test_data.time_ms == 1000
+        assert test_data.speed == 50.0
+        assert test_data.rpm == 5000
+        assert test_data.throttle == 75.0
+        assert test_data.battery_temp == 60.0
+    
+    def test_main_window_import(self):
+        """Test that main window can be imported."""
+        try:
+            from src.app import FS_TelemetryApp
+            assert FS_TelemetryApp is not None
+        except ImportError as e:
+            pytest.fail(f"Failed to import FS_TelemetryApp: {e}")
+    
+    def test_gui_module_structure(self):
+        """Test that GUI modules have correct structure."""
+        import src
+        
+        # Check main modules exist
+        assert hasattr(src, 'replay_mode_widget')
+        assert hasattr(src, 'live_mode_widget')
+        assert hasattr(src, 'telemetry_charts')
+        assert hasattr(src, 'spider_charts')
+        assert hasattr(src, 'temporal_analysis_widget')
+    
+    def test_pyqtgraph_mock_works(self):
+        """Test that pyqtgraph mock is working correctly."""
+        import pyqtgraph as pg
+        
+        # Should be able to call setConfigOptions without error
+        pg.setConfigOptions({'useOpenGL': False})
+        
+        # Should have mocked classes
+        assert pg.PlotWidget is not None
+        assert pg.ViewBox is not None
+    
+    def test_gui_components_classes_exist(self):
+        """Test that GUI component classes exist."""
+        from src.gui.replay_mode_widget import ReplayModeWidget
+        from src.gui.file_selector_widget import FileSelectorWidget
+        from src.app import FS_TelemetryApp
+        from src.visualization.telemetry_charts import TelemetryCharts
+        
+        # Check classes exist
+        assert ReplayModeWidget is not None
+        assert FileSelectorWidget is not None
+        assert FS_TelemetryApp is not None
+        assert TelemetryCharts is not None

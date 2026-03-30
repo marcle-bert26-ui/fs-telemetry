@@ -1,0 +1,70 @@
+"""
+Replay Thread Module
+Handles CSV file replay functionality.
+"""
+
+from PyQt5.QtCore import QThread, pyqtSignal, QTimer
+import csv
+try:
+    from ..data.csv_parser import parse_csv_line
+except ImportError:
+    # Fallback for testing environment
+    parse_csv_line = None
+try:
+    from ..core.telemetry_manager import TelemetryManager
+except ImportError:
+    # Fallback for testing environment
+    TelemetryManager = None
+
+class ReplayThread(QThread):
+    """Thread for replaying CSV telemetry data."""
+    
+    data_received = pyqtSignal(object)  # Peut être un int (index) ou TelemetryData
+    error_occurred = pyqtSignal(str)
+    status_changed = pyqtSignal(str)
+    finished = pyqtSignal()
+    
+    def __init__(self, csv_file_path: str):
+        """Initialize replay thread."""
+        super().__init__()
+        self.csv_file_path = csv_file_path
+        self.running = False
+        self.manager = TelemetryManager()
+        self.current_row = 0
+        self.rows = []
+        
+    def run(self):
+        """Run the replay thread."""
+        try:
+            self.running = True
+            self.status_changed.emit("Loading CSV file...")
+            
+            # Load CSV file
+            with open(self.csv_file_path, 'r', encoding='utf-8') as file:
+                reader = csv.reader(file)
+                self.rows = list(reader)
+            
+            self.status_changed.emit(f"Loaded {len(self.rows)} rows")
+            
+            # Replay data - RESTAURÉ pour fonctionnement normal
+            for i, row in enumerate(self.rows):
+                if not self.running:
+                    break
+                
+                # Parse CSV row
+                data = parse_csv_line(','.join(row))
+                if data:
+                    self.manager.update(data)
+                    self.data_received.emit(i)  # Émettre l'index pour éviter les doublons
+                
+                # Small delay removed for instant replay (more fluid)
+                # self.msleep(5)  # DISABLED: Instant replay mode
+            
+        except Exception as e:
+            self.error_occurred.emit(f"Replay error: {str(e)}")
+        finally:
+            self.finished.emit()
+    
+    def stop(self):
+        """Stop the replay thread."""
+        self.running = False

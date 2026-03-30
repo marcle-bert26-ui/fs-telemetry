@@ -13,13 +13,26 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-import app_config as config
-from .serial_source import SerialSource
-from .csv_source import CSVSource
-from .csv_parser import parse_csv_line, TelemetryData
-from .telemetry_manager import TelemetryManager
-from .csv_logger import CSVLogger
-from .console_display import ConsoleDisplay
+try:
+    import app_config as config
+except ImportError:
+    # Fallback for testing environment
+    config = None
+from src.sources.serial_source import SerialSource
+from src.data.csv_source import CSVSource
+try:
+    from src.data.csv_parser import parse_csv_line, TelemetryData
+except ImportError:
+    # Fallback for testing environment
+    parse_csv_line = None
+    TelemetryData = None
+try:
+    from src.core.telemetry_manager import TelemetryManager
+except ImportError:
+    # Fallback for testing environment
+    TelemetryManager = None
+from src.data.csv_logger import CSVLogger
+from src.utils.console_display import ConsoleDisplay
 
 
 def main_live():

@@ -9,7 +9,7 @@ import os
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(__file__))
 
-from main_window import MainWindow
+from src.gui.main_window import MainWindow
 from PyQt5.QtWidgets import QApplication
 
 

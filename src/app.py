@@ -10,7 +10,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(__file__))
 
-from main_window import MainWindow
+from .main_window import MainWindow
 from PyQt5.QtWidgets import QApplication
 
 

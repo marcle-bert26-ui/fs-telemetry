@@ -5,7 +5,7 @@ CSV Logging Module - Saves telemetry data to CSV files for persistent storage.
 import csv
 from datetime import datetime
 from pathlib import Path
-from src.csv_parser import TelemetryData
+from src.data.csv_parser import TelemetryData
 import app_config as config
 
 

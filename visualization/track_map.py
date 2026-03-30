@@ -10,7 +10,7 @@ from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QFont, QPainter, QPen, QBrush, QColor
 import pyqtgraph as pg
 from collections import deque
-from src.csv_parser import TelemetryData
+from src.data.csv_parser import TelemetryData
 
 
 class TrackMapWidget(QWidget):
