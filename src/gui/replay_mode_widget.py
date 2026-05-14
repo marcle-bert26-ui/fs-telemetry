@@ -700,11 +700,12 @@ class ReplayModeWidget(QWidget):
                         elif plot == self.charts.fuel_flow_lh_plot:
                             rpm = getattr(data, 'rpm', 0)
                             throttle = getattr(data, 'throttle', 0)
+                            cycle_time = getattr(data, 'cycle_time', 0)
                             injection_us = get_injection_time(rpm, throttle)
-                            # CORRECTED: 4 temps engine + proper injector flow rate
-                            if rpm is not None:
+                            # Utiliser cycle_time de la puce ECU (en µs) au lieu de calculer
+                            if cycle_time is not None and cycle_time > 0:
                                 injector_flow_rate = 0.415 / 60  # L/s (débit continu)
-                                injections_per_second = (rpm / 60 / 2)  # injections/s (4 temps)
+                                injections_per_second = 1000000.0 / cycle_time  # injections/s depuis cycle_time
                                 value = (injection_us / 1000000) * injector_flow_rate * injections_per_second * 3600
                             else:
                                 value = 0
@@ -721,20 +722,21 @@ class ReplayModeWidget(QWidget):
                                         rpm = getattr(data_i, 'rpm', 0)
                                         throttle = getattr(data_i, 'throttle', 0)
                                         injection_us = get_injection_time(rpm, throttle) if rpm is not None and throttle is not None else 0
-                                        # CORRECTED: 4 temps engine + proper injector flow rate - calculate volume directly
-                                        if rpm is not None and rpm > 0:
+                                        # Utiliser cycle_time de la puce ECU (en µs) au lieu de calculer
+                                        cycle_time_i = getattr(data_i, 'cycle_time', 0)
+                                        if cycle_time_i is not None and cycle_time_i > 0:
                                             # Volume par injection (L) = temps_injection * débit_injecteur
                                             volume_per_injection = (injection_us / 1000000) * (0.415 / 60)  # L
                                             
-                                            # Nombre d'injections par seconde (4 temps)
-                                            injections_per_second = rpm / 60 / 2
+                                            # Nombre d'injections par seconde à partir du cycle_time de la puce
+                                            injections_per_second = 1000000.0 / cycle_time_i  # injections/s depuis cycle_time
                                             
                                             # Volume ajouté par seconde = volume_par_injection * injections_par_seconde
                                             volume_per_second = volume_per_injection * injections_per_second
                                             
                                             # Ajout direct du volume par seconde (pas conversion L/h)
                                             volume_total += volume_per_second
-                                        # Si rpm = 0, on n'ajoute rien
+                                        # Si cycle_time = 0, on n'ajoute rien
                             value = volume_total
                         else:
                             value = 0

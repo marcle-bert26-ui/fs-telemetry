@@ -108,7 +108,8 @@ class TestTelemetryData:
             tire_temp_fl=75.2,
             tire_temp_fr=74.8,
             tire_temp_rl=73.5,
-            tire_temp_rr=74.1
+            tire_temp_rr=74.1,
+            cycle_time=0.0
         )
         
         assert data.time_ms == 123456
@@ -136,7 +137,8 @@ class TestTelemetryData:
             tire_temp_fl=0.0,
             tire_temp_fr=0.0,
             tire_temp_rl=0.0,
-            tire_temp_rr=0.0
+            tire_temp_rr=0.0,
+            cycle_time=0.0
         )
         
         str_repr = str(data)

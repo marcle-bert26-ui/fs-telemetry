@@ -520,8 +520,11 @@ class LiveModeWidget(QWidget):
                 injection_us = get_injection_time(data.rpm, data.throttle) if data.rpm is not None and data.throttle is not None else 0
                 self.injection_label.setText(f"{injection_us:.0f} µs")
                 
-                # Calculate fuel flow
-                fuel_flow_lh = (injection_us / 1000000) * (data.rpm / 60) * 0.415 * 3600 / 1000 if data.rpm is not None else 0
+                # Calculate fuel flow using cycle_time from ECU
+                if data.cycle_time is not None and data.cycle_time > 0:
+                    fuel_flow_lh = (injection_us / 1000000) * (1000000.0 / data.cycle_time) * 0.415 * 3600 / 1000
+                else:
+                    fuel_flow_lh = 0
                 
                 # Store data for timer-based chart updates
                 self.pending_data = data
@@ -620,14 +623,22 @@ class LiveModeWidget(QWidget):
                         elif plot == self.charts.fuel_flow_lh_plot:
                             rpm = getattr(data, 'rpm', 0)
                             throttle = getattr(data, 'throttle', 0)
+                            cycle_time = getattr(data, 'cycle_time', 0)
                             injection_us = get_injection_time(rpm, throttle)
-                            value = (injection_us / 1000000) * (rpm / 60) * 0.415 * 3600 / 1000
+                            if cycle_time is not None and cycle_time > 0:
+                                value = (injection_us / 1000000) * (1000000.0 / cycle_time) * 0.415 * 3600 / 1000
+                            else:
+                                value = 0
                         elif plot == self.charts.fuel_volume_plot:
                             # Calculate current volume directly from current data
                             rpm = getattr(data, 'rpm', 0)
                             throttle = getattr(data, 'throttle', 0)
+                            cycle_time = getattr(data, 'cycle_time', 0)
                             injection_us = get_injection_time(rpm, throttle)
-                            fuel_flow_lh = (injection_us / 1000000) * (rpm / 60) * 0.415 * 3600 / 1000
+                            if cycle_time is not None and cycle_time > 0:
+                                fuel_flow_lh = (injection_us / 1000000) * (1000000.0 / cycle_time) * 0.415 * 3600 / 1000
+                            else:
+                                fuel_flow_lh = 0
                             
                             # Use the latest cumulative volume if available, otherwise calculate
                             if len(self.charts.fuel_volume_data) > 0:
