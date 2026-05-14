@@ -427,13 +427,14 @@ class TelemetryCharts(QWidget):
         
         # Calculate fuel flow L/h based on injection (CORRECTED FORMULA)
         # 415 cc/min = 0.415 L/min = 0.415/60 L/s (débit continu de l'injecteur)
-        # Moteur 4 temps : 1 injection tous les 2 tours
-        if data.rpm is not None:
+        # Utiliser cycle_time de la puce ECU (en µs) au lieu de calculer
+        if data.cycle_time is not None and data.cycle_time > 0:
             # Volume par injection (L) = temps_injection * débit_injecteur
             volume_per_injection = (injection_us / 1000000) * (0.415 / 60)  # L
             
-            # Nombre d'injections par seconde (4 temps)
-            injections_per_second = (data.rpm / 60 / 2)  # injections/s
+            # Nombre d'injections par seconde à partir du cycle_time de la puce
+            # cycle_time est en µs, donc injections_per_second = 1,000,000 / cycle_time
+            injections_per_second = 1000000.0 / data.cycle_time  # injections/s
             
             # Volume par seconde = volume_par_injection * injections_par_seconde
             volume_per_second = volume_per_injection * injections_per_second

@@ -14,18 +14,20 @@ from src.core.telemetry_manager import TelemetryManager
 from src.data.csv_parser import TelemetryData
 
 
-def create_telemetry_data(time_ms, speed, rpm, throttle, battery_temp, 
+def create_telemetry_data(time_ms, speed, rpm, throttle, battery_temp,
                           g_force_lat=0.0, g_force_long=0.0, g_force_vert=1.0,
                           acceleration_x=0.0, acceleration_y=0.0, acceleration_z=0.0,
                           gps_latitude=48.8566, gps_longitude=2.3522, gps_altitude=100.0,
-                          tire_temp_fl=25.0, tire_temp_fr=25.0, tire_temp_rl=25.0, tire_temp_rr=25.0):
+                          tire_temp_fl=25.0, tire_temp_fr=25.0, tire_temp_rl=25.0, tire_temp_rr=25.0,
+                          cycle_time=0.0):
     """Helper function to create TelemetryData with all parameters."""
     return TelemetryData(
         time_ms=time_ms, speed=speed, rpm=rpm, throttle=throttle, battery_temp=battery_temp,
         g_force_lat=g_force_lat, g_force_long=g_force_long, g_force_vert=g_force_vert,
         acceleration_x=acceleration_x, acceleration_y=acceleration_y, acceleration_z=acceleration_z,
         gps_latitude=gps_latitude, gps_longitude=gps_longitude, gps_altitude=gps_altitude,
-        tire_temp_fl=tire_temp_fl, tire_temp_fr=tire_temp_fr, tire_temp_rl=tire_temp_rl, tire_temp_rr=tire_temp_rr
+        tire_temp_fl=tire_temp_fl, tire_temp_fr=tire_temp_fr, tire_temp_rl=tire_temp_rl, tire_temp_rr=tire_temp_rr,
+        cycle_time=cycle_time
     )
 
 

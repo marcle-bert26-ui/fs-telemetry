@@ -50,7 +50,8 @@ class TestCSVLogger:
             tire_temp_fl=0.0,
             tire_temp_fr=0.0,
             tire_temp_rl=0.0,
-            tire_temp_rr=0.0
+            tire_temp_rr=0.0,
+            cycle_time=0.0
         )
     
     def test_logger_initialization(self, temp_log_dir):
@@ -142,7 +143,8 @@ class TestCSVLogger:
                     tire_temp_fl=0.0,
                     tire_temp_fr=0.0,
                     tire_temp_rl=0.0,
-                    tire_temp_rr=0.0
+                    tire_temp_rr=0.0,
+                    cycle_time=0.0
                 )
                 logger.log(data)
             

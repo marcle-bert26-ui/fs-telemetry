@@ -126,7 +126,8 @@ class TestIntegration:
                     tire_temp_fl=0.0,
                     tire_temp_fr=0.0,
                     tire_temp_rl=0.0,
-                    tire_temp_rr=0.0
+                    tire_temp_rr=0.0,
+                    cycle_time=0.0
                 )
                 manager.update(data)
                 logger.log(data)
